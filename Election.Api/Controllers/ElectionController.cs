@@ -36,6 +36,13 @@ namespace Election.Api.Controllers
             return listElection;
         }
 
+        [HttpGet("{filter}")]
+        public List<ElectionModel> GetFilter(string filter)
+        {
+            var getFilter = ElectionCollection.Find(it => it.Tag == filter).ToList();
+            return getFilter;
+        }
+
         [HttpPost]
         public void FillDataArea()
         {
