@@ -24,18 +24,22 @@ public class ReadCsv
                     Int32.TryParse(dataElection[1], out Int32 numberArea);
                     Int32.TryParse(dataElection[6], out Int32 scorePolitical);
                     Int32.TryParse(dataElection[8], out Int32 targetScorePolitical);
-                    ListElection.Add(new ElectionModel
+                    if (numberArea != 0 && scorePolitical != 0 && targetScorePolitical != 0)
                     {
-                        NameArea = dataElection[0],
-                        NumberArea = numberArea,
-                        Province = dataElection[2],
-                        District = dataElection[3],
-                        Party = dataElection[4],
-                        NameRegister = dataElection[5],
-                        Score = scorePolitical,
-                        Tag = dataElection[7],
-                        TargetScore = targetScorePolitical
-                    });
+                        ListElection.Add(new ElectionModel
+                        {
+                            NameArea = dataElection[0],
+                            NumberArea = numberArea,
+                            Province = dataElection[2],
+                            District = dataElection[3],
+                            Party = dataElection[4],
+                            NameRegister = dataElection[5],
+                            Score = scorePolitical,
+                            Tag = dataElection[7],
+                            TargetScore = targetScorePolitical
+                        });
+                    }
+
                 }
             }
         }
