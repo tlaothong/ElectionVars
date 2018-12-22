@@ -37,15 +37,24 @@ namespace Election.Api.Controllers
         }
 
         [HttpPost]
-        public void FillData()
+        public void FillDataArea()
         {
+            ElectionCollection.DeleteMany(it => true);
             var csvReader = new ReadCsv();
             csvReader.GetElectionData();
             var electionData = csvReader.ListElection;
-            foreach (var data in electionData) {
-                data.Id = Guid.NewGuid().ToString();
+            var grouping = electionData.GroupBy(it => it.NameArea).ToList();
+            var selectData = new List<ElectionModel>();
+            foreach (var item in grouping)
+            {
+                var data = item.FirstOrDefault(it => it.Party == "เพื่อไทย");
+                if (data != null)
+                {
+                    data.Id = Guid.NewGuid().ToString();
+                    selectData.Add(data);
+                }
             }
-            ElectionCollection.InsertMany(electionData);
+            ElectionCollection.InsertMany(selectData);
         }
     }
 }
