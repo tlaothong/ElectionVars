@@ -8,6 +8,7 @@ using Election.Api.Models;
 public class ReadCsv
 {
     public List<ElectionModel> ListElection { get; set; }
+    public List<LocationModel> ListLocation { get; set; }
     public IEnumerable<ElectionModel> GetElectionData()
     {
         var FilePath = @"ExamData.csv";
@@ -45,4 +46,38 @@ public class ReadCsv
         }
         return ListElection;
     }
+
+    public IEnumerable<LocationModel> GetDataLocation()
+    {
+        var FilePath = @"LocationCode.csv";
+        ListLocation = new List<LocationModel>();
+        using (var reader = new StreamReader(FilePath))
+        {
+            while (!reader.EndOfStream)
+            {
+                var getReadCsv = reader.ReadLine();
+                var dataFromCsv = getReadCsv.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                foreach (var data in dataFromCsv)
+                {
+                    var dataLocation = data.Split(',').ToList();
+                    if (dataLocation[0] != "IDProvince")
+                    {
+                        ListLocation.Add(new LocationModel
+                        {
+                            IDProvince = dataLocation[0],
+                            LocationCode = dataLocation[1],
+                            Province = dataLocation[2],
+                            District = dataLocation[3],
+                            SubDistrict = dataLocation[4],
+                            ZipCode = dataLocation[5],
+                            Note = dataLocation[6]
+                        });
+                    }
+                }
+
+            }
+        }
+        return ListLocation;
+    }
+
 }
