@@ -16,6 +16,7 @@ namespace Election.Api.Controllers
     public class ElectionController : Controller
     {
         IMongoCollection<ElectionModel> ElectionCollection { get; set; }
+        IMongoCollection<LocationModel> LocationCollection { get; set; }
 
         public ElectionController()
         {
@@ -27,6 +28,7 @@ namespace Election.Api.Controllers
             var mongoClient = new MongoClient(settings);
             var database = mongoClient.GetDatabase("electionmana");
             ElectionCollection = database.GetCollection<ElectionModel>("Election");
+            LocationCollection = database.GetCollection<LocationModel>("LocationTest");
         }
 
         [HttpGet]
@@ -62,6 +64,21 @@ namespace Election.Api.Controllers
                 }
             }
             ElectionCollection.InsertMany(selectData);
+        }
+
+        [HttpPost]
+        public void fillDataLocation()
+        {
+            var csvReader = new ReadCsv();
+            csvReader.GetDataLocation();
+            var dataLocation = csvReader.ListLocation;
+            var listLocation = new List<LocationModel>();
+            foreach (var data in dataLocation)
+            {
+                data.Id = Guid.NewGuid().ToString();
+                listLocation.Add(data);
+            }
+            LocationCollection.InsertMany(listLocation);
         }
     }
 }
