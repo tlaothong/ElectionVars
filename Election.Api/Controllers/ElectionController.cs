@@ -17,6 +17,7 @@ namespace Election.Api.Controllers
     {
         IMongoCollection<ElectionModel> ElectionCollection { get; set; }
         IMongoCollection<LocationModel> LocationCollection { get; set; }
+        IMongoCollection<LocationCodeModel> LocationCodeCollection { get; set; }
 
         public ElectionController()
         {
@@ -29,13 +30,28 @@ namespace Election.Api.Controllers
             var database = mongoClient.GetDatabase("electionmana");
             ElectionCollection = database.GetCollection<ElectionModel>("Election");
             LocationCollection = database.GetCollection<LocationModel>("LocationTest");
+            LocationCodeCollection = database.GetCollection<LocationCodeModel>("LocationCodeTest");
         }
 
         [HttpGet]
-        public IEnumerable<ElectionModel> GetAll()
+        public List<ElectionModel> GetAll()
         {
             var listElection = ElectionCollection.Find(it => true).ToList();
             return listElection;
+        }
+
+        [HttpGet]
+        public List<LocationModel> GetAllLocation()
+        {
+            var listLocation = LocationCollection.Find(it => true).ToList();
+            return listLocation;
+        }
+
+        [HttpGet]
+        public List<LocationCodeModel> GetAllLocationCode()
+        {
+            var listLocationCode = LocationCodeCollection.Find(it => true).ToList();
+            return listLocationCode;
         }
 
         [HttpGet("{filter}")]
@@ -50,8 +66,7 @@ namespace Election.Api.Controllers
         {
             ElectionCollection.DeleteMany(it => true);
             var csvReader = new ReadCsv();
-            csvReader.GetElectionData();
-            var electionData = csvReader.ListElection;
+            var electionData = csvReader.GetElectionData();
             var grouping = electionData.GroupBy(it => it.NameArea).ToList();
             var selectData = new List<ElectionModel>();
             foreach (var item in grouping)
@@ -69,9 +84,9 @@ namespace Election.Api.Controllers
         [HttpPost]
         public void fillDataLocation()
         {
+            LocationCollection.DeleteMany(it => true);
             var csvReader = new ReadCsv();
-            csvReader.GetDataLocation();
-            var dataLocation = csvReader.ListLocation;
+            var dataLocation = csvReader.GetDataLocation();
             var listLocation = new List<LocationModel>();
             foreach (var data in dataLocation)
             {
@@ -79,6 +94,21 @@ namespace Election.Api.Controllers
                 listLocation.Add(data);
             }
             LocationCollection.InsertMany(listLocation);
+        }
+
+        [HttpPost]
+        public void fillDataLocationCode()
+        {
+            LocationCodeCollection.DeleteMany(it => true);
+            var csvReader = new ReadCsv();
+            var dataLocationCode = csvReader.GetDataLocatioCode().ToList();
+            var listLocationCode = new List<LocationCodeModel>();
+            foreach (var data in dataLocationCode)
+            {
+                data.Id = Guid.NewGuid().ToString();
+                listLocationCode.Add(data);
+            }
+            LocationCodeCollection.InsertMany(listLocationCode);
         }
     }
 }
