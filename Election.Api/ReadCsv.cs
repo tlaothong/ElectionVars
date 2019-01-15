@@ -103,7 +103,7 @@ public class ReadCsv
                     {
                         ListLocationCode.Add(new LocationCodeModel
                         {
-                            NameAre = dataLocatioCode[0],
+                            NameArea = dataLocatioCode[0],
                             IdArea = dataLocatioCode[1],
                             PartyListName = dataLocatioCode[2],
                             NumberRegister = dataLocatioCode[3],

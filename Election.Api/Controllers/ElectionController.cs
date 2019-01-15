@@ -17,6 +17,8 @@ namespace Election.Api.Controllers
     {
         IMongoCollection<ElectionModel> ElectionCollection { get; set; }
         IMongoCollection<LocationModel> LocationCollection { get; set; }
+
+        // IMongoCollection<LocationModel> LocationCollection2 { get; set; }
         IMongoCollection<LocationCodeModel> LocationCodeCollection { get; set; }
 
         public ElectionController()
@@ -30,6 +32,7 @@ namespace Election.Api.Controllers
             var database = mongoClient.GetDatabase("electionmana");
             ElectionCollection = database.GetCollection<ElectionModel>("Election");
             LocationCollection = database.GetCollection<LocationModel>("LocationTest");
+            // LocationCollection2 = database.GetCollection<LocationModel>("LocationTest2");
             LocationCodeCollection = database.GetCollection<LocationCodeModel>("LocationCodeTest");
         }
 
@@ -44,6 +47,44 @@ namespace Election.Api.Controllers
         public List<LocationModel> GetAllLocation()
         {
             var listLocation = LocationCollection.Find(it => true).ToList();
+            return listLocation;
+        }
+
+        // [HttpGet]
+        // public List<IGrouping<string, LocationModel>> GetLocationAll()
+        // {
+        //     var listLocation = LocationCollection.Find(it => true).ToList();
+        //     var list = listLocation.GroupBy(it => it.Province).ToList();
+        //     var list2 = new List<IGrouping<string, LocationModel>>();
+        //     var listTest = new List<LocationModel>();
+        //     // foreach (var data in list)
+        //     // {
+
+        //     //     // foreach (var data2 in data)
+        //     //     // {
+        //     //     //     listTest.Add(data2);
+        //     //     // }
+        //     // }
+        //     return list;
+        // }
+
+        [HttpGet]
+        public List<string> GetAllProvince()
+        {
+            var listLocation = LocationCollection.Find(it => true).ToList();
+            var listProvinceGroupBy = listLocation.OrderBy(it => it.LocationCode).GroupBy(it => it.Province).ToList();
+            var listProvinceName = new List<string>();
+            foreach (var data in listProvinceGroupBy)
+            {
+                listProvinceName.Add(data.Key.ToString());
+            }
+            return listProvinceName;
+        }
+
+        [HttpGet("{nameProvince}")]
+        public List<LocationModel> GetLocation(string nameProvince)
+        {
+            var listLocation = LocationCollection.Find(it => it.Province == nameProvince).ToList();
             return listLocation;
         }
 
