@@ -10,6 +10,8 @@ public class ReadCsv
     public List<ElectionModel> ListElection { get; set; }
     public List<LocationModel> ListLocation { get; set; }
     public List<LocationCodeModel> ListLocationCode { get; set; }
+    public List<AreaElection> ListArea { get; set; }
+    public List<PartyScore> ListPartyScore { get; set; }
     public IEnumerable<ElectionModel> GetElectionData()
     {
         var FilePath = @"ExamData.csv";
@@ -115,5 +117,72 @@ public class ReadCsv
             }
         }
         return ListLocationCode;
+    }
+
+    public List<AreaElection> GetDataAreaElection()
+    {
+        var FilePath = @"DataAreaElection.csv";
+        ListArea = new List<AreaElection>();
+        using (var reader = new StreamReader(FilePath))
+        {
+            while (!reader.EndOfStream)
+            {
+                var getReadCsv = reader.ReadLine();
+                var dataFromCsv = getReadCsv.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                foreach (var data in dataFromCsv)
+                {
+                    var getData = data.Split(',').ToList();
+                    if (getData[0] != "เขต" && getData[1] != "พรรค" && getData[2] != "คะแนน" &&
+                    getData[3] != "Tag" && getData[4] != "พรรคที่ชนะ")
+                    {
+                        Int32.TryParse(getData[2], out Int32 ScoreParty);
+                        ListArea.Add(new AreaElection
+                        {
+                            NameArea = getData[0],
+                            PartyName = getData[1],
+                            Score = ScoreParty,
+                            Tag = getData[3],
+                            PartyWinner = getData[4]
+                        });
+                    }
+                }
+            }
+
+        }
+        return ListArea;
+    }
+
+    public List<PartyScore> GetDataPartyScore()
+    {
+        var FilePath = @"ParytyScore.csv";
+        ListPartyScore = new List<PartyScore>();
+        using (var reader = new StreamReader(FilePath))
+        {
+            while (!reader.EndOfStream)
+            {
+                var getReadCsv = reader.ReadLine();
+                var dataFromCsv = getReadCsv.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                foreach (var data in dataFromCsv)
+                {
+                    var dataPary = data.Split(',').ToList();
+                    if (dataPary[0] != "พรรค" && dataPary[1] != "สส.พึงมี" && dataPary[2] != "สส.แบ่งเขต"
+                    && dataPary[3] != "สส.บัญชีรายชื่อ")
+                    {
+                        Int32.TryParse(dataPary[1], out Int32 scoreTotal);
+                        Int32.TryParse(dataPary[2], out Int32 scoreArea);
+                        Int32.TryParse(dataPary[3], out Int32 scoreNameList);
+                        ListPartyScore.Add(new PartyScore
+                        {
+                            PartyName = dataPary[0],
+                            TotalScore = scoreTotal,
+                            AreaScore = scoreArea,
+                            NameListScore = scoreNameList
+                        });
+                    }
+                }
+
+            }
+        }
+        return ListPartyScore;
     }
 }

@@ -20,7 +20,8 @@ namespace Election.Api.Controllers
 
         // IMongoCollection<LocationModel> LocationCollection2 { get; set; }
         IMongoCollection<LocationCodeModel> LocationCodeCollection { get; set; }
-
+        IMongoCollection<AreaElection> AreaElectionColloection { get; set; }
+        IMongoCollection<PartyScore> PartyScoreColloection { get; set; }
         public ElectionController()
         {
             var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://guntza22:guntza220938@ds026558.mlab.com:26558/electionmana"));
@@ -34,6 +35,8 @@ namespace Election.Api.Controllers
             LocationCollection = database.GetCollection<LocationModel>("LocationTest");
             // LocationCollection2 = database.GetCollection<LocationModel>("LocationTest2");
             LocationCodeCollection = database.GetCollection<LocationCodeModel>("LocationCodeTest");
+            AreaElectionColloection = database.GetCollection<AreaElection>("AreaElection");
+            PartyScoreColloection = database.GetCollection<PartyScore>("PartyScore");
         }
 
         [HttpGet]
@@ -49,24 +52,6 @@ namespace Election.Api.Controllers
             var listLocation = LocationCollection.Find(it => true).ToList();
             return listLocation;
         }
-
-        // [HttpGet]
-        // public List<IGrouping<string, LocationModel>> GetLocationAll()
-        // {
-        //     var listLocation = LocationCollection.Find(it => true).ToList();
-        //     var list = listLocation.GroupBy(it => it.Province).ToList();
-        //     var list2 = new List<IGrouping<string, LocationModel>>();
-        //     var listTest = new List<LocationModel>();
-        //     // foreach (var data in list)
-        //     // {
-
-        //     //     // foreach (var data2 in data)
-        //     //     // {
-        //     //     //     listTest.Add(data2);
-        //     //     // }
-        //     // }
-        //     return list;
-        // }
 
         [HttpGet]
         public List<string> GetAllProvince()
@@ -150,6 +135,49 @@ namespace Election.Api.Controllers
                 listLocationCode.Add(data);
             }
             LocationCodeCollection.InsertMany(listLocationCode);
+        }
+
+        [HttpPost]
+        public void fillDataAreaElection()
+        {
+            AreaElectionColloection.DeleteMany(it => true);
+            var csvReader = new ReadCsv();
+            var dataArea = csvReader.GetDataAreaElection();
+            var listArea = new List<AreaElection>();
+            foreach (var data in dataArea)
+            {
+                data.Id = Guid.NewGuid().ToString();
+                listArea.Add(data);
+            }
+            AreaElectionColloection.InsertMany(listArea);
+        }
+
+        [HttpGet]
+        public List<AreaElection> GetAllAreaElection()
+        {
+            var getDataArea = AreaElectionColloection.Find(it => true).ToList();
+            return getDataArea;
+        }
+
+        [HttpPost]
+        public void fillDataPartyScore()
+        {
+            PartyScoreColloection.DeleteMany(it => true);
+            var csvReader = new ReadCsv();
+            var dataPartScore = csvReader.GetDataPartyScore();
+            var listParty = new List<PartyScore>();
+            foreach (var data in dataPartScore)
+            {
+                data.Id = Guid.NewGuid().ToString();
+                listParty.Add(data);
+            }
+            PartyScoreColloection.InsertMany(listParty);
+        }
+        [HttpGet]
+        public List<PartyScore> GetAllParty()
+        {
+            var getPartyScore = PartyScoreColloection.Find(it => true).ToList();
+            return getPartyScore;
         }
     }
 }
