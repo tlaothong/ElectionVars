@@ -11,5 +11,6 @@ namespace Election.Api.Models
         public int TotalScore { get; set; }
         public int AreaScore { get; set; }
         public int NameListScore { get; set; }
+        public double PercentScore { get; set; }
     }
 }
