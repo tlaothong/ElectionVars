@@ -84,6 +84,21 @@ namespace Election.Api.Controllers
             AreaElectionColloection.InsertMany(listArea);
         }
 
+        [HttpPost]
+        public void fillDataPartyScore()
+        {
+            PartyScoreColloection.DeleteMany(it => true);
+            var csvReader = new ReadCsv();
+            var dataPartScore = csvReader.GetDataPartyScore();
+            var listParty = new List<PartyScore>();
+            foreach (var data in dataPartScore)
+            {
+                data.Id = Guid.NewGuid().ToString();
+                listParty.Add(data);
+            }
+            PartyScoreColloection.InsertMany(listParty);
+        }
+
         [HttpGet]
         public List<ElectionModel> GetAll()
         {
@@ -152,22 +167,6 @@ namespace Election.Api.Controllers
             var getFilterPartyName = AreaElectionColloection.Find(it => it.PartyName == "เพื่อไทย").ToList();
             var getTag = getFilterPartyName.Where(it => it.Tag == tagName).ToList();
             return getTag;
-        }
-
-
-        [HttpPost]
-        public void fillDataPartyScore()
-        {
-            PartyScoreColloection.DeleteMany(it => true);
-            var csvReader = new ReadCsv();
-            var dataPartScore = csvReader.GetDataPartyScore();
-            var listParty = new List<PartyScore>();
-            foreach (var data in dataPartScore)
-            {
-                data.Id = Guid.NewGuid().ToString();
-                listParty.Add(data);
-            }
-            PartyScoreColloection.InsertMany(listParty);
         }
 
         [HttpGet]
