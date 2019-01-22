@@ -9,7 +9,6 @@ public class ReadCsv
 {
     public List<ElectionModel> ListElection { get; set; }
     public List<LocationModel> ListLocation { get; set; }
-    public List<LocationCodeModel> ListLocationCode { get; set; }
     public List<AreaElection> ListArea { get; set; }
     public List<PartyScore> ListPartyScore { get; set; }
     public IEnumerable<ElectionModel> GetElectionData()
@@ -81,42 +80,6 @@ public class ReadCsv
             }
         }
         return ListLocation;
-    }
-
-    public IEnumerable<LocationCodeModel> GetDataLocatioCode()
-    {
-        var FilePath = @"LocationPostalCode.csv";
-        ListLocationCode = new List<LocationCodeModel>();
-        using (var reader = new StreamReader(FilePath))
-        {
-            while (!reader.EndOfStream)
-            {
-                var getReadCsv = reader.ReadLine();
-                var dataFromCsv = getReadCsv.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList();
-                foreach (var data in dataFromCsv)
-                {
-                    var dataLocatioCode = data.Split(',').ToList();
-                    var IsRegister = true;
-                    if (dataLocatioCode[5] == "")
-                    {
-                        IsRegister = false;
-                    }
-                    if (dataLocatioCode[0] != "เขตแต่ละจังหวัด(กกต)")
-                    {
-                        ListLocationCode.Add(new LocationCodeModel
-                        {
-                            NameArea = dataLocatioCode[0],
-                            IdArea = dataLocatioCode[1],
-                            PartyListName = dataLocatioCode[2],
-                            NumberRegister = dataLocatioCode[3],
-                            NameRegister = dataLocatioCode[4],
-                            HasRegister = IsRegister
-                        });
-                    }
-                }
-            }
-        }
-        return ListLocationCode;
     }
 
     public List<AreaElection> GetDataAreaElection()

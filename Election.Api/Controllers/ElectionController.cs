@@ -17,9 +17,6 @@ namespace Election.Api.Controllers
     {
         IMongoCollection<ElectionModel> ElectionCollection { get; set; }
         IMongoCollection<LocationModel> LocationCollection { get; set; }
-
-        // IMongoCollection<LocationModel> LocationCollection2 { get; set; }
-        IMongoCollection<LocationCodeModel> LocationCodeCollection { get; set; }
         IMongoCollection<AreaElection> AreaElectionColloection { get; set; }
         IMongoCollection<PartyScore> PartyScoreColloection { get; set; }
         public ElectionController()
@@ -33,58 +30,8 @@ namespace Election.Api.Controllers
             var database = mongoClient.GetDatabase("electionmana");
             ElectionCollection = database.GetCollection<ElectionModel>("Election");
             LocationCollection = database.GetCollection<LocationModel>("LocationTest");
-            // LocationCollection2 = database.GetCollection<LocationModel>("LocationTest2");
-            LocationCodeCollection = database.GetCollection<LocationCodeModel>("LocationCodeTest");
             AreaElectionColloection = database.GetCollection<AreaElection>("AreaElection");
             PartyScoreColloection = database.GetCollection<PartyScore>("PartyScore");
-        }
-
-        [HttpGet]
-        public List<ElectionModel> GetAll()
-        {
-            var listElection = ElectionCollection.Find(it => true).ToList();
-            return listElection;
-        }
-
-        [HttpGet]
-        public List<LocationModel> GetAllLocation()
-        {
-            var listLocation = LocationCollection.Find(it => true).ToList();
-            return listLocation;
-        }
-
-        [HttpGet]
-        public List<string> GetAllProvince()
-        {
-            var listLocation = LocationCollection.Find(it => true).ToList();
-            var listProvinceGroupBy = listLocation.OrderBy(it => it.LocationCode).GroupBy(it => it.Province).ToList();
-            var listProvinceName = new List<string>();
-            foreach (var data in listProvinceGroupBy)
-            {
-                listProvinceName.Add(data.Key.ToString());
-            }
-            return listProvinceName;
-        }
-
-        [HttpGet("{nameProvince}")]
-        public List<LocationModel> GetLocation(string nameProvince)
-        {
-            var listLocation = LocationCollection.Find(it => it.Province == nameProvince).ToList();
-            return listLocation;
-        }
-
-        [HttpGet]
-        public List<LocationCodeModel> GetAllLocationCode()
-        {
-            var listLocationCode = LocationCodeCollection.Find(it => true).ToList();
-            return listLocationCode;
-        }
-
-        [HttpGet("{filter}")]
-        public List<ElectionModel> GetFilter(string filter)
-        {
-            var getFilter = ElectionCollection.Find(it => it.Tag == filter).ToList();
-            return getFilter;
         }
 
         [HttpPost]
@@ -123,21 +70,6 @@ namespace Election.Api.Controllers
         }
 
         [HttpPost]
-        public void fillDataLocationCode()
-        {
-            LocationCodeCollection.DeleteMany(it => true);
-            var csvReader = new ReadCsv();
-            var dataLocationCode = csvReader.GetDataLocatioCode().ToList();
-            var listLocationCode = new List<LocationCodeModel>();
-            foreach (var data in dataLocationCode)
-            {
-                data.Id = Guid.NewGuid().ToString();
-                listLocationCode.Add(data);
-            }
-            LocationCodeCollection.InsertMany(listLocationCode);
-        }
-
-        [HttpPost]
         public void fillDataAreaElection()
         {
             AreaElectionColloection.DeleteMany(it => true);
@@ -153,11 +85,75 @@ namespace Election.Api.Controllers
         }
 
         [HttpGet]
+        public List<ElectionModel> GetAll()
+        {
+            var listElection = ElectionCollection.Find(it => true).ToList();
+            return listElection;
+        }
+
+        [HttpGet]
+        public List<LocationModel> GetAllLocation()
+        {
+            var listLocation = LocationCollection.Find(it => true).ToList();
+            return listLocation;
+        }
+
+        [HttpGet]
+        public List<string> GetAllProvince()
+        {
+            var listLocation = LocationCollection.Find(it => true).ToList();
+            var listProvinceGroupBy = listLocation.OrderBy(it => it.LocationCode).GroupBy(it => it.Province).ToList();
+            var listProvinceName = new List<string>();
+            foreach (var data in listProvinceGroupBy)
+            {
+                listProvinceName.Add(data.Key.ToString());
+            }
+            return listProvinceName;
+        }
+
+        [HttpGet("{nameProvince}")]
+        public List<LocationModel> GetLocation(string nameProvince)
+        {
+            var listLocation = LocationCollection.Find(it => it.Province == nameProvince).ToList();
+            return listLocation;
+        }
+
+        [HttpGet("{filter}")]
+        public List<ElectionModel> GetFilter(string filter)
+        {
+            var getFilter = ElectionCollection.Find(it => it.Tag == filter).ToList();
+            return getFilter;
+        }
+
+        [HttpGet]
         public List<AreaElection> GetAllAreaElection()
         {
             var getDataArea = AreaElectionColloection.Find(it => true).ToList();
             return getDataArea;
         }
+
+        [HttpGet]
+        public List<AreaElection> GetMaxAreaElection()
+        {
+            var getDataArea = AreaElectionColloection.Find(it => true).ToList();
+            var dataElection = getDataArea.GroupBy(it => it.NameArea).ToList();
+            var listMaxArea = new List<AreaElection>();
+            foreach (var item in dataElection)
+            {
+                var itemMax = item.FirstOrDefault(it => it.Score == item.Max(i => i.Score));
+                listMaxArea.Add(itemMax);
+            }
+            return listMaxArea;
+        }
+
+        [HttpGet("{tagName}")]
+        public List<AreaElection> FilterTag(string tagName)
+        {
+            var getFilterPartyName = AreaElectionColloection.Find(it => it.PartyName == "เพื่อไทย").ToList();
+            var getTag = getFilterPartyName.Where(it => it.Tag == tagName).ToList();
+            return getTag;
+        }
+
 
         [HttpPost]
         public void fillDataPartyScore()
@@ -173,10 +169,28 @@ namespace Election.Api.Controllers
             }
             PartyScoreColloection.InsertMany(listParty);
         }
+
         [HttpGet]
         public List<PartyScore> GetAllParty()
         {
             var getPartyScore = PartyScoreColloection.Find(it => true).ToList();
+            var totalScore = 0.0;
+            foreach (var item in getPartyScore)
+            {
+                totalScore += item.TotalScore;
+            }
+
+            foreach (var item in getPartyScore)
+            {
+                item.PercentScore = item.TotalScore * 100 / totalScore;
+            }
+            return getPartyScore;
+        }
+
+        [HttpGet("{nameParty}")]
+        public PartyScore GetPartyScore(string nameParty)
+        {
+            var getPartyScore = PartyScoreColloection.Find(it => it.PartyName == nameParty).FirstOrDefault();
             return getPartyScore;
         }
     }
