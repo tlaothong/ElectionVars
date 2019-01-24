@@ -11,6 +11,7 @@ public class ReadCsv
     public List<LocationModel> ListLocation { get; set; }
     public List<AreaElection> ListArea { get; set; }
     public List<PartyScore> ListPartyScore { get; set; }
+
     public IEnumerable<ElectionModel> GetElectionData()
     {
         var FilePath = @"ExamData.csv";
@@ -147,5 +148,61 @@ public class ReadCsv
             }
         }
         return ListPartyScore;
+    }
+
+    //Remove
+    public List<File1> GetFile1()
+    {
+        var FilePath = @"File1.csv";
+        var listFile1 = new List<File1>();
+        using (var reader = new StreamReader(FilePath))
+        {
+            while (!reader.EndOfStream)
+            {
+                var getFromCsv = reader.ReadLine();
+                var getLine = getFromCsv.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                foreach (var line in getLine)
+                {
+                    var getData = line.Split(',').ToList();
+                    listFile1.Add(new File1
+                    {
+                        NameParty = getData[2],
+                        IDProvince = getData[1],
+                        NoRegister = getData[3],
+                        NameRegister = getData[4],
+                    });
+                }
+            }
+        }
+        return listFile1;
+    }
+
+    public List<AreaData> GetFile2()
+    {
+        var FilePath = @"File2.csv";
+        var listFile2 = new List<AreaData>();
+        using (var reader = new StreamReader(FilePath))
+        {
+            while (!reader.EndOfStream)
+            {
+                var getFromCsv = reader.ReadLine();
+                var getLine = getFromCsv.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                foreach (var line in getLine)
+                {
+                    var getData = line.Split(',').ToList();
+                    listFile2.Add(new AreaData
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        NameParty = getData[0],
+                        NameArea = getData[1],
+                        LocationCode = getData[2],
+                        IDProvince = getData[3],
+                        District = getData[4],
+                        SubDistrict = getData[5],
+                    });
+                }
+            }
+        }
+        return listFile2;
     }
 }
