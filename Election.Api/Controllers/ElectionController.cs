@@ -33,6 +33,7 @@ namespace Election.Api.Controllers
             ElectionCollection = database.GetCollection<ElectionModel>("Election");
             LocationCollection = database.GetCollection<LocationModel>("LocationTest");
             AreaElectionColloection = database.GetCollection<AreaElection>("AreaElection");
+            // Use now
             PartyScoreColloection = database.GetCollection<PartyScore>("PartyScore");
             AreaCollection = database.GetCollection<AreaData>("AreaTest");
         }
@@ -230,6 +231,7 @@ namespace Election.Api.Controllers
             var csvReader = new ReadCsv();
             var dataFile1 = csvReader.GetFile1();
             var areaDatas = csvReader.GetFile2();
+            // Mock Date
 
             foreach (var data in areaDatas)
             {
@@ -239,6 +241,7 @@ namespace Election.Api.Controllers
                     data.NameRegister = getFile1.NameRegister;
                     data.NoRegister = getFile1.NoRegister;
                     data.Status = true;
+                    data.ScoreReceive = new List<DataScore>();
                 }
                 else
                 {
@@ -247,5 +250,44 @@ namespace Election.Api.Controllers
             }
             AreaCollection.InsertMany(areaDatas);
         }
+
+        [HttpPost("{id}")]
+        public void AddScoreElection(string id, [FromBody]DataScore addScore)
+        {
+            var getArea = AreaCollection.Find(it => it.Id == id).FirstOrDefault();
+
+            addScore.DateElection = DateTime.Now;
+            getArea.ScoreReceive.Add(new DataScore
+            {
+                DateElection = addScore.DateElection,
+                Score = addScore.Score
+            });
+            AreaCollection.ReplaceOne(it => it.Id == id, getArea);
+        }
+
+        [HttpGet("{id}")]
+        public AreaData GetAreaData(string id)
+        {
+            var getArea = AreaCollection.Find(it => it.Id == id).FirstOrDefault();
+            return getArea;
+        }
+
+        [HttpPost]
+        public void AddMockScore()
+        {
+            var getArea = AreaCollection.Find(it => true).ToList();
+            var rnd = new Random();
+            foreach (var item in getArea)
+            {
+                item.ScoreReceive.Add(new DataScore
+                {
+                    DateElection = new DateTime(2019, 1, 28),
+                    Score = rnd.Next(1000, 3000)
+                });
+            }
+            AreaCollection.DeleteMany(it => true);
+            AreaCollection.InsertMany(getArea);
+        }
+
     }
 }

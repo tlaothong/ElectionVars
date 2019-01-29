@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace Election.Api.Models
@@ -7,7 +8,6 @@ namespace Election.Api.Models
     {
         [BsonId]
         public string Id { get; set; }
-        public DateTime DateElection { get; set; }
         public string NameParty { get; set; }
         public string NameArea { get; set; }
         public string LocationCode { get; set; }
@@ -17,6 +17,7 @@ namespace Election.Api.Models
         public string NameRegister { get; set; }
         public string NoRegister { get; set; }
         public bool Status { get; set; }
-        public int Score { get; set; }
+        public List<DataScore> ScoreReceive { get; set; }
+
     }
 }
