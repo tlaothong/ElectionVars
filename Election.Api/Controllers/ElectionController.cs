@@ -225,6 +225,8 @@ namespace Election.Api.Controllers
             return getAllArea;
         }
 
+        // ---------------------------------------------------------------------------------------------------------------------------------------
+
         // Area Data
         [HttpPost]
         public void AddMockData()
@@ -294,7 +296,7 @@ namespace Election.Api.Controllers
         [HttpPost]
         public void MockDataTable2()
         {
-            var getDataTable3 = AreaCollection.Find(it => true).ToList();
+            var getDataTable3 = AreaCollection.Find(it => true).ToList().OrderBy(it => it.IDProvince).OrderBy(it => it.LocationCode.Substring(0, 2));
             var dataGroupByNameArea = getDataTable3.GroupBy(it => it.NameArea).ToList();
             var listDataTable2 = new List<DataTable2>();
             var rnd = new Random();
@@ -310,6 +312,7 @@ namespace Election.Api.Controllers
                         Id = Guid.NewGuid().ToString(),
                         NameArea = data.NameArea,
                         IDProvince = data.IDProvince,
+                        LocationCode = data.LocationCode,
                         NameParty = data.NameParty,
                         NoRegister = data.NoRegister,
                         NameRegister = data.NameRegister,
@@ -392,6 +395,109 @@ namespace Election.Api.Controllers
             {
                 DataTable2Collection.ReplaceOne(it => it.Id == item.Id, item);
             }
+        }
+
+        //Get max Score
+        [HttpGet]
+        public List<DataTable2> GetMaxScoreArea()
+        {
+            var getData = DataTable2Collection.Find(it => true).ToList().OrderBy(it => it.IDProvince).OrderBy(it => it.LocationCode.Substring(0, 2));
+            var groupByArea = getData.GroupBy(it => it.NameArea).ToList();
+            var listMax = new List<DataTable2>();
+            foreach (var item in groupByArea)
+            {
+                var getMaxScore = item.FirstOrDefault(it => it.Score == item.Max(i => i.Score));
+                listMax.Add(getMaxScore);
+            }
+            return listMax;
+        }
+
+        [HttpGet]
+        public List<string> GetAreaAll()
+        {
+            var getData = AreaCollection.Find(it => true).ToList().OrderBy(it => it.IDProvince).OrderBy(it => it.LocationCode.Substring(0, 2));
+            var groupByArea = getData.GroupBy(it => it.NameArea).ToList();
+            var listAreaName = new List<string>();
+            foreach (var item in groupByArea)
+            {
+                listAreaName.Add(item.Key);
+            }
+            return listAreaName;
+        }
+
+        [HttpGet("{nameArea}")]
+        public List<AreaData> GetDistrictAll(string nameArea)
+        {
+            var getData = AreaCollection.Find(it => it.NameArea == nameArea).ToList();
+            var listDistrict = getData.Where(it => it.NameParty == "เพื่อไทย").ToList();
+            return listDistrict;
+        }
+
+        [HttpPost]
+        public void GetTotalScoreOfPartry()
+        {
+            var getDataFromTable2 = DataTable2Collection.Find(it => true).ToList();
+            var total = 0.0;
+            foreach (var item in getDataFromTable2)
+            {
+                total += item.Score;
+            }
+            var scorePerRegister = total / 500;
+
+            var groupByParty = getDataFromTable2.GroupBy(it => it.NameParty).ToList();
+            var listPartyScore = new List<PartyScore>();
+
+
+            foreach (var item in groupByParty)
+            {
+
+                var percentScore = item.Sum(it => it.Score) / scorePerRegister * 100 / 500;
+                var totalScore = percentScore / 100 * 500;
+                var areaScore = 0;
+                foreach (var scoreParty in item)
+                {
+                    areaScore += (scoreParty.Tag == "ชนะ") ? 1 : 0;
+                }
+                listPartyScore.Add(new PartyScore
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    PartyName = item.Key,
+                    TotalScore = totalScore,
+                    AreaScore = areaScore,
+                    NameListScore = totalScore - areaScore,
+                    PercentScore = percentScore
+                });
+            }
+            PartyScoreColloection.InsertMany(listPartyScore);
+        }
+
+        [HttpGet]
+        public List<double> getTotalScore()
+        {
+            var getDataFromTable2 = DataTable2Collection.Find(it => true).ToList();
+            var total = 0.0;
+            var listDouble = new List<Double>();
+            foreach (var item in getDataFromTable2)
+            {
+                total += item.Score;
+            }
+            var scorePerRegister = total / 500;
+
+            var groupByParty = getDataFromTable2.GroupBy(it => it.NameParty).ToList();
+            var percentScore = 0.0;
+            foreach (var item in groupByParty)
+            {
+                percentScore = item.Sum(it => it.Score);
+                listDouble.Add(percentScore);
+            }
+            return listDouble;
+        }
+
+        [HttpGet]
+        public List<PartyScore> GetAllPartyScore()
+        {
+            var getData = PartyScoreColloection.Find(it => true).ToList();
+            return getData;
         }
     }
 }
