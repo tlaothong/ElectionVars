@@ -290,25 +290,99 @@ namespace Election.Api.Controllers
             AreaCollection.InsertMany(getArea);
         }
 
-        // //Table 2
-        // public List<DataTable2> MockDataTable2()
-        // {
-        //     var getDataTable3 = AreaCollection.Find(it => true).ToList();
-        //     var dataGroupBy = getDataTable3.GroupBy(it => it.NameArea).ToList();
-        //     var listDataTable2 = new List<DataTable2>();
-        //     foreach (var item in dataGroupBy)
-        //     {
-        //         foreach (var datas in item)
-        //         {
-        //             listDataTable2.Add(new DataTable2
-        //             {
-        //                 Id = Guid.NewGuid().ToString(),
-        //                 NameArea = item.Key.ToString(),
-        //             });
-        //         }
-        //     }
+        //Table 2
+        [HttpPost]
+        public void MockDataTable2()
+        {
+            var getDataTable3 = AreaCollection.Find(it => true).ToList();
+            var dataGroupByNameArea = getDataTable3.GroupBy(it => it.NameArea).ToList();
+            var listDataTable2 = new List<DataTable2>();
+            var rnd = new Random();
+            foreach (var item in dataGroupByNameArea)
+            {
+                var dataGroupByNameParty = item.GroupBy(it => it.NameParty).ToList();
+                foreach (var datas in dataGroupByNameParty)
+                {
+                    var sumScore = datas.Sum(it => it.ScoreReceive.Last().Score);
+                    var data = datas.FirstOrDefault();
+                    listDataTable2.Add(new DataTable2
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        NameArea = data.NameArea,
+                        IDProvince = data.IDProvince,
+                        NameParty = data.NameParty,
+                        NoRegister = data.NoRegister,
+                        NameRegister = data.NameRegister,
+                        Status = data.Status,
+                        Score = sumScore,
+                        TargetScore = sumScore + rnd.Next(-1500, 1500)
+                    });
+                }
+            }
+            DataTable2Collection.InsertMany(listDataTable2);
+        }
 
-        // }
+        [HttpGet("{nameArea}")]
+        public List<DataTable2> getArea(string nameArea)
+        {
+            return DataTable2Collection.Find(it => it.NameArea == nameArea).ToList();
+        }
 
+        [HttpPost]
+        public void AddInitialName()
+        {
+            var getData = DataTable2Collection.Find(it => true).ToList();
+            foreach (var item in getData)
+            {
+                switch (item.NameParty)
+                {
+                    case "เพื่อไทย":
+                        item.InitialParty = "พท.";
+                        break;
+                    case "ประชาธิปัตย์":
+                        item.InitialParty = "ปชป.";
+                        break;
+                    case "พลังประชารัฐ":
+                        item.InitialParty = "พปชร.";
+                        break;
+                    case "อนาคตใหม่":
+                        item.InitialParty = "อ.น.ค.";
+                        break;
+                    case "ภูมิใจไทย":
+                        item.InitialParty = "ภท.";
+                        break;
+                    case "เสรีรวมไทย":
+                        item.InitialParty = "สร.";
+                        break;
+                    case "พรรคไทยรักษาชาติ":
+                        item.InitialParty = "ทษช.";
+                        break;
+                    case "รวมพลังประชาชาติไทย":
+                        item.InitialParty = "รปช.";
+                        break;
+                    default:
+                        break;
+                }
+            }
+            DataTable2Collection.DeleteMany(it => true);
+            DataTable2Collection.InsertMany(getData);
+        }
+
+        [HttpPost]
+        public void AddTag()
+        {
+            var getData = DataTable2Collection.Find(it => true).ToList();
+            var dataGroupByNameArea = getData.GroupBy(it => it.NameArea);
+            foreach (var item in dataGroupByNameArea)
+            {
+                var maxScore = item.Max(it => it.Score);
+                foreach (var data in item)
+                {
+                    data.Tag = (data.Score == maxScore) ? "ชนะ" : "แพ้";
+                }
+            }
+            DataTable2Collection.DeleteMany(it => true);
+            DataTable2Collection.InsertMany(getData);
+        }
     }
 }
