@@ -384,5 +384,14 @@ namespace Election.Api.Controllers
             DataTable2Collection.DeleteMany(it => true);
             DataTable2Collection.InsertMany(getData);
         }
+
+        [HttpPost]
+        public void AddPollScore([FromBody]List<DataTable2> getDataArea)
+        {
+            foreach (var item in getDataArea)
+            {
+                DataTable2Collection.ReplaceOne(it => it.Id == item.Id, item);
+            }
+        }
     }
 }
