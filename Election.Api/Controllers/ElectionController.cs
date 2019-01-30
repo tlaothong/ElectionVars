@@ -20,6 +20,7 @@ namespace Election.Api.Controllers
         IMongoCollection<AreaElection> AreaElectionColloection { get; set; }
         IMongoCollection<PartyScore> PartyScoreColloection { get; set; }
         IMongoCollection<AreaData> AreaCollection { get; set; }
+        IMongoCollection<DataTable2> DataTable2Collection { get; set; }
 
         public ElectionController()
         {
@@ -36,6 +37,7 @@ namespace Election.Api.Controllers
             // Use now
             PartyScoreColloection = database.GetCollection<PartyScore>("PartyScore");
             AreaCollection = database.GetCollection<AreaData>("AreaTest");
+            DataTable2Collection = database.GetCollection<DataTable2>("Table2");
         }
 
         // Fill Data
@@ -231,7 +233,6 @@ namespace Election.Api.Controllers
             var csvReader = new ReadCsv();
             var dataFile1 = csvReader.GetFile1();
             var areaDatas = csvReader.GetFile2();
-            // Mock Date
 
             foreach (var data in areaDatas)
             {
@@ -288,6 +289,26 @@ namespace Election.Api.Controllers
             AreaCollection.DeleteMany(it => true);
             AreaCollection.InsertMany(getArea);
         }
+
+        // //Table 2
+        // public List<DataTable2> MockDataTable2()
+        // {
+        //     var getDataTable3 = AreaCollection.Find(it => true).ToList();
+        //     var dataGroupBy = getDataTable3.GroupBy(it => it.NameArea).ToList();
+        //     var listDataTable2 = new List<DataTable2>();
+        //     foreach (var item in dataGroupBy)
+        //     {
+        //         foreach (var datas in item)
+        //         {
+        //             listDataTable2.Add(new DataTable2
+        //             {
+        //                 Id = Guid.NewGuid().ToString(),
+        //                 NameArea = item.Key.ToString(),
+        //             });
+        //         }
+        //     }
+
+        // }
 
     }
 }
