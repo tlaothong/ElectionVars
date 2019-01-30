@@ -9,6 +9,7 @@ namespace Election.Api.Models
         public string Id { get; set; }
         public string NameArea { get; set; }
         public string IDProvince { get; set; }
+        public string LocationCode { get; set; }
         public string NameParty { get; set; }
         public string InitialParty { get; set; }
         public string NoRegister { get; set; }

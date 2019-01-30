@@ -8,9 +8,9 @@ namespace Election.Api.Models
         [BsonId]
         public string Id { get; set; }
         public string PartyName { get; set; }
-        public int TotalScore { get; set; }
-        public int AreaScore { get; set; }
-        public int NameListScore { get; set; }
+        public double TotalScore { get; set; }
+        public double AreaScore { get; set; }
+        public double NameListScore { get; set; }
         public double PercentScore { get; set; }
     }
 }
