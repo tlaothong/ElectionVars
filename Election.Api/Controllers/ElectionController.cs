@@ -448,7 +448,7 @@ namespace Election.Api.Controllers
                 var percentScore = item.Sum(it => it.Score) * 100.0 / total;
                 var totalScore = Convert.ToInt32(Math.Round(percentScore / 100 * 500));
                 var areaScore = item.Count(it => it.Tag == "ชนะ");
-               
+
                 listPartyScore.Add(new PartyScore
                 {
                     Id = Guid.NewGuid().ToString(),
@@ -460,28 +460,6 @@ namespace Election.Api.Controllers
                 });
             }
             PartyScoreColloection.InsertMany(listPartyScore);
-        }
-
-        [HttpGet]
-        public List<double> getTotalScore()
-        {
-            var getDataFromTable2 = DataTable2Collection.Find(it => true).ToList();
-            var total = 0.0;
-            var listDouble = new List<Double>();
-            foreach (var item in getDataFromTable2)
-            {
-                total += item.Score;
-            }
-            var scorePerRegister = total / 500;
-
-            var groupByParty = getDataFromTable2.GroupBy(it => it.NameParty).ToList();
-            var percentScore = 0.0;
-            foreach (var item in groupByParty)
-            {
-                percentScore = item.Sum(it => it.Score);
-                listDouble.Add(percentScore);
-            }
-            return listDouble;
         }
 
         [HttpGet]
