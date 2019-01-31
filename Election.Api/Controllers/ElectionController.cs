@@ -436,28 +436,19 @@ namespace Election.Api.Controllers
         [HttpPost]
         public void GetTotalScoreOfPartry()
         {
+            PartyScoreColloection.DeleteMany(it => true);
             var getDataFromTable2 = DataTable2Collection.Find(it => true).ToList();
-            var total = 0.0;
-            foreach (var item in getDataFromTable2)
-            {
-                total += item.Score;
-            }
-            var scorePerRegister = total / 500;
+            long total = getDataFromTable2.Sum(it => it.Score);
 
             var groupByParty = getDataFromTable2.GroupBy(it => it.NameParty).ToList();
             var listPartyScore = new List<PartyScore>();
 
-
             foreach (var item in groupByParty)
             {
-
-                var percentScore = item.Sum(it => it.Score) / scorePerRegister * 100 / 500;
-                var totalScore = percentScore / 100 * 500;
-                var areaScore = 0;
-                foreach (var scoreParty in item)
-                {
-                    areaScore += (scoreParty.Tag == "ชนะ") ? 1 : 0;
-                }
+                var percentScore = item.Sum(it => it.Score) * 100.0 / total;
+                var totalScore = Convert.ToInt32(Math.Round(percentScore / 100 * 500));
+                var areaScore = item.Count(it => it.Tag == "ชนะ");
+               
                 listPartyScore.Add(new PartyScore
                 {
                     Id = Guid.NewGuid().ToString(),
