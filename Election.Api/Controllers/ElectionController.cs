@@ -187,6 +187,20 @@ namespace Election.Api.Controllers
             return DataTable2Collection.Find(it => it.NameArea == nameArea).ToList();
         }
 
+        [HttpGet]
+        public List<DataTable2> GetAllTable2()
+        {
+            var getData = DataTable2Collection.Find(it => true).ToList();
+            return getData;
+        }
+
+        [HttpGet("{tag}")]
+        public List<DataTable2> FilterTagTable2(string tag)
+        {
+            var getData = DataTable2Collection.Find(it => it.NameParty == "เพื่อไทย" && it.Tag == tag).ToList();
+            return getData;
+        }
+
         [HttpPost]
         public void AddPollScore([FromBody]List<DataTable2> getDataArea)
         {
