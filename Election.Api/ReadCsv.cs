@@ -243,7 +243,7 @@ public class ReadCsv
         listFullScorePoll = new List<ScorePollCsv>();
         foreach (var item in listScorePollCsv)
         {
-            if (item.Score == 0 && item.NameParty == "บัตรดี")
+            if (item.NameParty == "บัตรดี")
             {
                 var goodScoreRandom = rnd.Next(80000, 20001);
                 listFullScorePoll.Add(new ScorePollCsv
