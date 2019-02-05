@@ -21,6 +21,7 @@ namespace Election.Api.Controllers
         IMongoCollection<PartyScore> PartyScoreColloection { get; set; }
         IMongoCollection<AreaData> AreaCollection { get; set; }
         IMongoCollection<DataTable2> DataTable2Collection { get; set; }
+        IMongoCollection<ScorePoll> ScorePollCollection { get; set; }
 
         public ElectionController()
         {
@@ -38,6 +39,7 @@ namespace Election.Api.Controllers
             PartyScoreColloection = database.GetCollection<PartyScore>("PartyScore");
             AreaCollection = database.GetCollection<AreaData>("AreaTest");
             DataTable2Collection = database.GetCollection<DataTable2>("Table2");
+            ScorePollCollection = database.GetCollection<ScorePoll>("ScorePoll");
         }
 
         // Election
@@ -252,5 +254,40 @@ namespace Election.Api.Controllers
             var getData = PartyScoreColloection.Find(it => true).ToList();
             return getData;
         }
+
+        // [HttpPost]
+        // public void MockDataScorePoll()
+        // {
+        //     var readerCsv = new ReadCsv();
+        //     var listScorePoll = new List<ScorePoll>();
+        //     var dataPollCsv = readerCsv.MockModelScorePollCsv().OrderBy(it => it.IdArea).ToList();
+        //     var groupByArea = dataPollCsv.GroupBy(it => it.IdArea).ToList();
+        //     var goodScoreDefault = 0;
+        //     foreach (var item in groupByArea)
+        //     {
+        //         foreach (var data in item)
+        //         {
+        //             if (data.NameParty == "บัตรดี")
+        //             {
+        //                 goodScoreDefault = data.Score;
+        //             }
+        //             else
+        //             {
+        //                 var ScoreParty = Math.Round(data.Score * goodScoreDefault / 100.0);
+        //                 DateTime dt = new DateTime(2019, 1, 22);
+        //                 listScorePoll.Add(new ScorePoll
+        //                 {
+        //                     Id = Guid.NewGuid().ToString(),
+        //                     IdParty = data.IdParty,
+        //                     IdArea = data.IdArea,
+        //                     datePoll = dt,
+        //                     Score = ScoreParty,
+        //                     Source = "poll"
+        //                 });
+        //             }
+        //         }
+        //     }
+        //     ScorePollCollection.InsertMany(listScorePoll);
+        // }
     }
 }
