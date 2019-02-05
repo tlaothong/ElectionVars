@@ -16,6 +16,7 @@ namespace Election.Api.Controllers
     public class ElectionV2Controller : Controller
     {
         IMongoCollection<ScorePoll> ScorePollCollection { get; set; }
+        IMongoCollection<ScorePollCsv> TestScore { get; set; }
 
         public ElectionV2Controller()
         {
@@ -32,10 +33,11 @@ namespace Election.Api.Controllers
         [HttpPost]
         public void MockDataScorePoll()
         {
+            ScorePollCollection.DeleteMany(it => true);
             var readerCsv = new ReadCsv();
             var listScorePoll = new List<ScorePoll>();
-            var dataPollCsv = readerCsv.MockModelScorePollCsv().OrderBy(it => it.IdArea).ToList();
-            var groupByArea = dataPollCsv.GroupBy(it => it.IdArea).ToList();
+            var dataPollCsv = readerCsv.MockDataScorePoll();
+            var groupByArea = dataPollCsv.OrderBy(it => it.IdArea).GroupBy(it => it.IdArea).ToList();
             var goodScoreDefault = 0;
             foreach (var item in groupByArea)
             {
@@ -47,21 +49,27 @@ namespace Election.Api.Controllers
                     }
                     else
                     {
-                        var ScoreParty = Math.Round(data.Score * goodScoreDefault / 100.0);
-                        DateTime dt = new DateTime(2019, 1, 22);
                         listScorePoll.Add(new ScorePoll
                         {
                             Id = Guid.NewGuid().ToString(),
                             IdParty = data.IdParty,
                             IdArea = data.IdArea,
-                            datePoll = dt,
-                            Score = ScoreParty,
+                            datePoll = new DateTime(2019, 1, 22),
+                            Score = Math.Round(data.Score * goodScoreDefault / 100.0),
                             Source = "poll"
                         });
                     }
                 }
             }
             ScorePollCollection.InsertMany(listScorePoll);
+        }
+
+        [HttpGet("{idArea}")]
+        public List<ScorePoll> GetListScoreArea(string idArea)
+        {
+            idArea.ToUpper();
+            var getData = ScorePollCollection.Find(it => it.IdArea == idArea.ToUpper()).ToList();
+            return getData;
         }
     }
 }
