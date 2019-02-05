@@ -11,6 +11,7 @@ public class ReadCsv
     public List<LocationModel> ListLocation { get; set; }
     public List<AreaElection> ListArea { get; set; }
     public List<PartyScore> ListPartyScore { get; set; }
+    public List<ScorePollCsv> listFullScorePoll { get; set; }
 
     public IEnumerable<ElectionModel> GetElectionData()
     {
@@ -205,4 +206,65 @@ public class ReadCsv
         }
         return listFile2;
     }
+    // New Update 2/3/2019
+    public List<ScorePollCsv> MockModelScorePollCsv()
+    {
+        var FilePath = @"ScorePoll.csv";
+        var rnd = new Random();
+        var listScorePollCsv = new List<ScorePollCsv>();
+        using (var reader = new StreamReader(FilePath))
+        {
+            while (!reader.EndOfStream)
+            {
+                var getFromCsv = reader.ReadLine();
+                var getLine = getFromCsv.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                foreach (var item in getLine)
+                {
+                    var getDataFromLine = item.Split(',').ToList();
+                    if (getDataFromLine[0] != "รหัสพรรค" && getDataFromLine[1] != "ชื่อเขต" && getDataFromLine[2] != "รหัสเขต" &&
+                    getDataFromLine[3] != "ชื่อพรรค" && getDataFromLine[4] != "เปอร์เซ็น/คะแนน" && getDataFromLine[5] != "ภูมิภาค")
+                    {
+                        Int32.TryParse(getDataFromLine[4], out Int32 ScoreFromPoll);
+                        listScorePollCsv.Add(new ScorePollCsv
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            IdParty = getDataFromLine[0],
+                            NameParty = getDataFromLine[3],
+                            IdArea = getDataFromLine[2],
+                            NameArea = getDataFromLine[1],
+                            Region = getDataFromLine[5],
+                            Score = ScoreFromPoll
+                        });
+                    }
+                }
+            }
+        }
+
+        listFullScorePoll = new List<ScorePollCsv>();
+        foreach (var item in listScorePollCsv)
+        {
+            if (item.NameParty == "บัตรดี")
+            {
+                var goodScoreRandom = rnd.Next(80000, 20001);
+                listFullScorePoll.Add(new ScorePollCsv
+                {
+                    Id = item.Id,
+                    IdParty = item.IdParty,
+                    NameParty = item.NameParty,
+                    IdArea = item.IdArea,
+                    NameArea = item.NameArea,
+                    Region = item.Region,
+                    Score = goodScoreRandom
+                });
+            }
+            else
+            {
+                listFullScorePoll.Add(item);
+            }
+        }
+        // var sortData = listFullScorePoll.OrderBy(it => it.IdArea).ToList();
+        return listFullScorePoll;
+    }
+
+
 }
