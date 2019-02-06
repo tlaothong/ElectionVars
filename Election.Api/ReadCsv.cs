@@ -259,4 +259,44 @@ public class ReadCsv
         }
         return listScore;
     }
+
+    public List<ScoreArea> MockPrototypeDataTable2()
+    {
+        var FilePath = @"DataTable2.csv";
+        var listScoreArea = new List<ScoreArea>();
+        using (var reader = new StreamReader(FilePath))
+        {
+            while (!reader.EndOfStream)
+            {
+                var getFromCsv = reader.ReadLine();
+                Console.WriteLine(getFromCsv);
+                var getLine = getFromCsv.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                foreach (var data in getLine)
+                {
+                    var getDataFromLine = data.Split(',').ToList();
+                    if (getDataFromLine[0] != "IdArea" && getDataFromLine[1] != "NameArea"
+                    && getDataFromLine[2] != "IdParty" && getDataFromLine[3] != "NameParty"
+                    && getDataFromLine[4] != "NoRegister" && getDataFromLine[5] != "NameRegister"
+                    && getDataFromLine[6] != "Status" && getDataFromLine[7] != "NameInitial"
+                    && getDataFromLine[8] != "Tags[]" && getDataFromLine[9] != "Score"
+                    && getDataFromLine[10] != "Source")
+                    {
+                        listScoreArea.Add(new ScoreArea
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            IdArea = getDataFromLine[0],
+                            NameArea = getDataFromLine[1],
+                            IdParty = getDataFromLine[2],
+                            NameParty = getDataFromLine[3],
+                            NoRegister = getDataFromLine[4],
+                            NameRegister = getDataFromLine[5],
+                            Status = true,
+                            NameInitial = getDataFromLine[7],
+                        });
+                    }
+                }
+            }
+        }
+        return listScoreArea;
+    }
 }

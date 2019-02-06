@@ -16,7 +16,8 @@ namespace Election.Api.Controllers
     public class ElectionV2Controller : Controller
     {
         IMongoCollection<ScorePoll> ScorePollCollection { get; set; }
-        IMongoCollection<ScorePollCsv> TestScore { get; set; }
+        IMongoCollection<ScoreArea> ScoreAreaCollection { get; set; }
+        IMongoCollection<PartyList> PartyScoreCollection { get; set; }
 
         public ElectionV2Controller()
         {
@@ -28,6 +29,8 @@ namespace Election.Api.Controllers
             var mongoClient = new MongoClient(settings);
             var database = mongoClient.GetDatabase("electionmana");
             ScorePollCollection = database.GetCollection<ScorePoll>("ScorePoll");
+            ScoreAreaCollection = database.GetCollection<ScoreArea>("ScoreArea");
+            PartyScoreCollection = database.GetCollection<PartyList>("PartyListScore");
         }
 
         [HttpPost]
@@ -35,6 +38,7 @@ namespace Election.Api.Controllers
         {
             ScorePollCollection.DeleteMany(it => true);
             var readerCsv = new ReadCsv();
+            var rnd = new Random();
             var listScorePoll = new List<ScorePoll>();
             var dataPollCsv = readerCsv.MockDataScorePoll();
             var groupByArea = dataPollCsv.OrderBy(it => it.IdArea).GroupBy(it => it.IdArea).ToList();
@@ -49,19 +53,118 @@ namespace Election.Api.Controllers
                     }
                     else
                     {
+                        var scorePolls = Math.Round(data.Score * goodScoreDefault / 100.0);
+                        var scoreTarget = (rnd.Next(0, 1) == 0) ? scorePolls + rnd.Next(1000, 2000) : scorePolls - rnd.Next(1000, 2000);
                         listScorePoll.Add(new ScorePoll
                         {
                             Id = Guid.NewGuid().ToString(),
                             IdParty = data.IdParty,
                             IdArea = data.IdArea,
                             datePoll = new DateTime(2019, 1, 22),
-                            Score = Math.Round(data.Score * goodScoreDefault / 100.0),
-                            Source = "poll"
+                            Score = scorePolls,
+                            Source = "poll",
+                            TargetScoreDefault = scoreTarget,
+                            TargetScore = scoreTarget
                         });
                     }
                 }
             }
             ScorePollCollection.InsertMany(listScorePoll);
+        }
+
+        [HttpPost]
+        public void MockDataTable4()
+        {
+            var readerCsv = new ReadCsv();
+            var dataPrototypeTable2 = readerCsv.MockPrototypeDataTable2().OrderBy(it => it.IdArea).ToList();
+            ScoreAreaCollection.InsertMany(dataPrototypeTable2);
+        }
+
+        [HttpPost]
+        public void MockScoreParty()
+        {
+            var getData = ScoreAreaCollection.Find(it => true).ToList();
+            var groupByParty = getData.GroupBy(it => it.IdParty).ToList();
+            var totalScore = getData.Sum(it => it.Score);
+            var listScoreParty = new List<PartyList>();
+            foreach (var item in groupByParty)
+            {
+                var totalScoreParty = item.Sum(it => it.Score);
+                var percentScore = totalScoreParty * 100.0 / totalScore;
+                var totalScoreHave = Math.Round(percentScore / 100 * 500);
+                var nameP = item.FirstOrDefault(it => it.IdParty == item.Key).NameParty;
+                // Any 
+                var totalScoreArea = item.Count(it => it.Tags.Any(i => i == "ชนะ"));
+                listScoreParty.Add(new PartyList
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    PartyName = nameP,
+                    TotalScore = totalScoreHave,
+                    AreaScore = totalScoreArea,
+                    NameListScore = totalScoreHave - totalScoreArea,
+                    PercentScore = percentScore
+                });
+            }
+            PartyScoreCollection.DeleteMany(it => true);
+            var sortData = listScoreParty.OrderByDescending(it => it.PercentScore);
+            PartyScoreCollection.InsertMany(sortData);
+        }
+        //ScoreArea Table 4
+        [HttpPost]
+        public void CalculateScoreFromScorePoll()
+        {
+            var getDataScorePoll = ScorePollCollection.Find(it => true).ToList();
+            var getDataScoreArea = ScoreAreaCollection.Find(it => true).ToList();
+            var groupByArea = getDataScorePoll.GroupBy(it => it.IdArea).ToList();
+            var listScoreArea = new List<ScoreArea>();
+            foreach (var item in groupByArea)
+            {
+                var groupByPart = item.GroupBy(it => it.IdParty).ToList();
+                foreach (var data in groupByPart)
+                {
+                    var getCurrentData = data.OrderByDescending(it => it.datePoll).FirstOrDefault();
+                    if (getCurrentData.IdParty != "000" && getCurrentData.IdParty != "888")
+                    {
+                        var getDataParty = getDataScoreArea.FirstOrDefault(it => it.IdArea == getCurrentData.IdArea
+                        && it.IdParty == getCurrentData.IdParty);
+                        getDataParty.Score = getCurrentData.Score;
+                        getDataParty.Source = getCurrentData.Source;
+                        listScoreArea.Add(getDataParty);
+                    }
+                }
+            }
+            ScoreAreaCollection.DeleteMany(it => true);
+            ScoreAreaCollection.InsertMany(listScoreArea);
+        }
+
+        [HttpPost]
+        public void SetTags()
+        {
+            var getDataScoreArea = ScoreAreaCollection.Find(it => true).ToList();
+            var groupByArea = getDataScoreArea.GroupBy(it => it.IdArea).ToList();
+            var listScoreArea = new List<ScoreArea>();
+            foreach (var item in groupByArea)
+            {
+                var maxScore = item.Max(it => it.Score);
+                foreach (var data in item)
+                {
+                    var tagDefault = (data.Score == maxScore) ? "ชนะ" : "แพ้";
+                    data.Tags = new List<string>();
+                    data.Tags.Add(tagDefault);
+                    // ScoreAreaCollection.ReplaceOne(it => it.Id == data.Id, data);
+                    listScoreArea.Add(data);
+                }
+            }
+            ScoreAreaCollection.DeleteMany(it => true);
+            ScoreAreaCollection.InsertMany(listScoreArea);
+        }
+
+        // ScorePoll
+        [HttpGet]
+        public List<ScorePoll> GetAllScorePoll()
+        {
+            var getData = ScorePollCollection.Find(it => true).ToList();
+            return getData;
         }
 
         [HttpGet("{idArea}")]
