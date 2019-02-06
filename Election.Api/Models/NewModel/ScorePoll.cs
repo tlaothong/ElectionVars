@@ -13,6 +13,8 @@ namespace Election.Api.Models
         public DateTime datePoll { get; set; }
         public double Score { get; set; }
         public string Source { get; set; }
-        public int TargetScore { get; set; }
+        public double TargetScoreDefault { get; set; }
+        public double TargetScore { get; set; }
+
     }
 }
