@@ -7,6 +7,7 @@ namespace Election.Api.Models
     {
         [BsonId]
         public string Id { get; set; }
+        public string IdParty { get; set; }
         public string PartyName { get; set; }
         public double TotalScore { get; set; }
         public double AreaScore { get; set; }

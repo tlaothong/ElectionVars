@@ -98,6 +98,7 @@ namespace Election.Api.Controllers
                 listScoreParty.Add(new PartyList
                 {
                     Id = Guid.NewGuid().ToString(),
+                    IdParty = item.Key,
                     PartyName = nameP,
                     TotalScore = totalScoreHave,
                     AreaScore = totalScoreArea,
@@ -159,12 +160,13 @@ namespace Election.Api.Controllers
             ScoreAreaCollection.InsertMany(listScoreArea);
         }
 
-        // ScorePoll
+        // APi ScorePoll
         [HttpGet]
         public List<ScorePoll> GetAllScorePoll()
         {
             var getData = ScorePollCollection.Find(it => true).ToList();
-            return getData;
+            var sortData = getData.OrderByDescending(it => it.datePoll).ToList();
+            return sortData;
         }
 
         [HttpGet("{idArea}")]
@@ -172,7 +174,58 @@ namespace Election.Api.Controllers
         {
             idArea.ToUpper();
             var getData = ScorePollCollection.Find(it => it.IdArea == idArea.ToUpper()).ToList();
+            var sortData = getData.OrderByDescending(it => it.datePoll).ToList();
+            return sortData;
+        }
+
+        //Api ScoreArea Table4
+        [HttpGet]
+        public List<ScoreArea> GetAllScoreTable4()
+        {
+            var getData = ScoreAreaCollection.Find(it => true).ToList();
+            var sortData = getData.OrderBy(it => it.IdArea).ToList();
+            return sortData;
+        }
+
+        [HttpGet("{IdArea}")]
+        public List<ScoreArea> GetScoreArea(string IdArea)
+        {
+
+            var getData = ScoreAreaCollection.Find(it => it.IdArea == IdArea.ToUpper()).ToList();
+            var sortData = getData.OrderBy(it => it.IdArea).ToList();
+            return sortData;
+        }
+
+        [HttpGet]
+        public List<ScoreArea> GetMaxScoreArea()
+        {
+            var getData = ScoreAreaCollection.Find(it => true).ToList();
+            var groupByArea = getData.GroupBy(it => it.IdArea).ToList();
+            var listMaxScore = new List<ScoreArea>();
+            foreach (var item in groupByArea)
+            {
+                var getWinArea = item.FirstOrDefault(it => it.Tags.Any(i => i == "ชนะ"));
+                listMaxScore.Add(getWinArea);
+            }
+            var sortData = listMaxScore.OrderBy(it => it.IdArea).ToList();
+            return sortData;
+        }
+
+        //Total Score Table Party
+        [HttpGet]
+        public List<PartyList> GetAllPartyScore()
+        {
+            var getData = PartyScoreCollection.Find(it => true).ToList();
+            var sortData = getData.OrderByDescending(it => it.PercentScore).ToList();
+            return sortData;
+        }
+
+        [HttpGet("{IdParty}")]
+        public PartyList GetPartyScore(string IdParty)
+        {
+            var getData = PartyScoreCollection.Find(it => it.IdParty == IdParty).FirstOrDefault();
             return getData;
         }
+
     }
 }
