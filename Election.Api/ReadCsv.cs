@@ -226,33 +226,42 @@ public class ReadCsv
                     && getDataFromLine[4] != "เปอร์เซ็น" && getDataFromLine[5] != "ภูมิภาค")
                     {
                         var t = rnd.Next(1000, 3000);
-                        if (getDataFromLine[3] == "บัตรดี")
+                        listScore.Add(new ScorePollCsv
                         {
-                            listScore.Add(new ScorePollCsv
-                            {
-                                Id = Guid.NewGuid().ToString(),
-                                IdParty = getDataFromLine[0],
-                                NameParty = getDataFromLine[3],
-                                IdArea = getDataFromLine[2],
-                                NameArea = getDataFromLine[1],
-                                Region = getDataFromLine[5],
-                                Score = rnd.Next(80000, 100001)
-                            });
-                        }
-                        else
-                        {
-                            Int32.TryParse(getDataFromLine[4], out Int32 scorePolls);
-                            listScore.Add(new ScorePollCsv
-                            {
-                                Id = Guid.NewGuid().ToString(),
-                                IdParty = getDataFromLine[0],
-                                NameParty = getDataFromLine[3],
-                                IdArea = getDataFromLine[2],
-                                NameArea = getDataFromLine[1],
-                                Region = getDataFromLine[5],
-                                Score = scorePolls
-                            });
-                        }
+                            Id = Guid.NewGuid().ToString(),
+                            IdParty = getDataFromLine[0],
+                            NameParty = getDataFromLine[3],
+                            IdArea = getDataFromLine[2],
+                            NameArea = getDataFromLine[1],
+                            Region = getDataFromLine[5]
+                        });
+                        // if (getDataFromLine[3] == "บัตรดี")
+                        // {
+                        //     listScore.Add(new ScorePollCsv
+                        //     {
+                        //         Id = Guid.NewGuid().ToString(),
+                        //         IdParty = getDataFromLine[0],
+                        //         NameParty = getDataFromLine[3],
+                        //         IdArea = getDataFromLine[2],
+                        //         NameArea = getDataFromLine[1],
+                        //         Region = getDataFromLine[5],
+                        //         Score = rnd.Next(80000, 100001)
+                        //     });
+                        // }
+                        // else
+                        // {
+                        //     Int32.TryParse(getDataFromLine[4], out Int32 scorePolls);
+                        //     listScore.Add(new ScorePollCsv
+                        //     {
+                        //         Id = Guid.NewGuid().ToString(),
+                        //         IdParty = getDataFromLine[0],
+                        //         NameParty = getDataFromLine[3],
+                        //         IdArea = getDataFromLine[2],
+                        //         NameArea = getDataFromLine[1],
+                        //         Region = getDataFromLine[5],
+                        //         Score = scorePolls
+                        //     });
+                        // }
                     }
                 }
             }

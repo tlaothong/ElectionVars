@@ -15,6 +15,5 @@ namespace Election.Api.Models
         public string Source { get; set; }
         public double TargetScoreDefault { get; set; }
         public double TargetScore { get; set; }
-
     }
 }
