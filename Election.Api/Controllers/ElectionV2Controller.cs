@@ -91,9 +91,11 @@ namespace Election.Api.Controllers
             {
                 var totalScoreParty = item.Sum(it => it.Score);
                 var percentScore = totalScoreParty * 100.0 / totalScore;
-                var totalScoreHave = Math.Round(percentScore / 100 * 500);
+                // var totalScoreHave = Math.Round(percentScore / 100 * 500);
+                var totalScoreHave = Convert.ToInt32(Math.Round(percentScore / 100 * 500));
                 var nameP = item.FirstOrDefault(it => it.IdParty == item.Key).NameParty;
                 // Any 
+
                 var totalScoreArea = item.Count(it => it.Tags.Any(i => i == "ชนะ"));
                 var scorePartyList = (totalScoreHave - totalScoreArea >= 0) ? totalScoreHave - totalScoreArea : 0;
                 listScoreParty.Add(new PartyList
@@ -111,6 +113,18 @@ namespace Election.Api.Controllers
             var sortData = listScoreParty.OrderByDescending(it => it.PercentScore);
             PartyScoreCollection.InsertMany(sortData);
         }
+
+        [HttpGet]
+        public PartyList GetSum()
+        {
+            var getData = PartyScoreCollection.Find(it => true).ToList();
+            var gt = new PartyList();
+            gt.TotalScore = getData.Sum(it => it.TotalScore);
+            gt.AreaScore = getData.Sum(it => it.AreaScore);
+            gt.PercentScore = getData.Sum(it => it.PercentScore);
+            return gt;
+        }
+
         //ScoreArea Table 4
         [HttpPost]
         public void CalculateScoreFromScorePoll()
@@ -136,7 +150,8 @@ namespace Election.Api.Controllers
                 }
             }
             ScoreAreaCollection.DeleteMany(it => true);
-            ScoreAreaCollection.InsertMany(listScoreArea);
+            var sortData = listScoreArea.OrderBy(it => it.IdArea).ToList();
+            ScoreAreaCollection.InsertMany(sortData);
         }
 
         [HttpPost]
@@ -158,7 +173,8 @@ namespace Election.Api.Controllers
                 }
             }
             ScoreAreaCollection.DeleteMany(it => true);
-            ScoreAreaCollection.InsertMany(listScoreArea);
+            var sortData = listScoreArea.OrderBy(it => it.IdArea).ToList();
+            ScoreAreaCollection.InsertMany(sortData);
         }
 
         // APi ScorePoll
@@ -235,6 +251,5 @@ namespace Election.Api.Controllers
             var getData = PartyScoreCollection.Find(it => it.IdParty == IdParty).FirstOrDefault();
             return getData;
         }
-
     }
 }
