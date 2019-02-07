@@ -95,6 +95,7 @@ namespace Election.Api.Controllers
                 var nameP = item.FirstOrDefault(it => it.IdParty == item.Key).NameParty;
                 // Any 
                 var totalScoreArea = item.Count(it => it.Tags.Any(i => i == "ชนะ"));
+                var scorePartyList = (totalScoreHave - totalScoreArea >= 0)? totalScoreHave - totalScoreArea : 0;
                 listScoreParty.Add(new PartyList
                 {
                     Id = Guid.NewGuid().ToString(),
@@ -102,7 +103,7 @@ namespace Election.Api.Controllers
                     PartyName = nameP,
                     TotalScore = totalScoreHave,
                     AreaScore = totalScoreArea,
-                    NameListScore = totalScoreHave - totalScoreArea,
+                    NameListScore = scorePartyList,
                     PercentScore = percentScore
                 });
             }
