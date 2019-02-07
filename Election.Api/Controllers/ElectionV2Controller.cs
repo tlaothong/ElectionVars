@@ -95,7 +95,7 @@ namespace Election.Api.Controllers
                 var nameP = item.FirstOrDefault(it => it.IdParty == item.Key).NameParty;
                 // Any 
                 var totalScoreArea = item.Count(it => it.Tags.Any(i => i == "ชนะ"));
-                var scorePartyList = (totalScoreHave - totalScoreArea >= 0)? totalScoreHave - totalScoreArea : 0;
+                var scorePartyList = (totalScoreHave - totalScoreArea >= 0) ? totalScoreHave - totalScoreArea : 0;
                 listScoreParty.Add(new PartyList
                 {
                     Id = Guid.NewGuid().ToString(),
@@ -210,6 +210,14 @@ namespace Election.Api.Controllers
             }
             var sortData = listMaxScore.OrderBy(it => it.IdArea).ToList();
             return sortData;
+        }
+
+        [HttpGet("{idParty}")]
+        public List<ScoreArea> GetScoreAreaByParty(string idParty)
+        {
+            var getData = ScoreAreaCollection.Find(it => it.IdParty == idParty).ToList();
+            var getScoreAreaByParty = getData.Where(it => it.Tags.Any(i => i == "ชนะ")).ToList();
+            return getScoreAreaByParty;
         }
 
         //Total Score Table Party
