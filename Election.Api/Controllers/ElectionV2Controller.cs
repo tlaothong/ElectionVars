@@ -216,7 +216,7 @@ namespace Election.Api.Controllers
         public List<ScoreArea> GetScoreAreaByParty(string idParty)
         {
             var getData = ScoreAreaCollection.Find(it => it.IdParty == idParty).ToList();
-            var getScoreAreaByParty = getData.Where(it => it.Tags.Any(i => i == "ชนะ")).ToList();
+            var getScoreAreaByParty = getData.Where(it => it.Tags.Any(i => i == "ชนะ")).ToList().OrderBy(it => it.IdArea).ToList();
             return getScoreAreaByParty;
         }
 
