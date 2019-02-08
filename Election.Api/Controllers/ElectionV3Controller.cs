@@ -47,7 +47,7 @@ namespace Election.Api.Controllers
             return Table4Collection.Find(it => true).ToList();
         }
 
-        [HttpGet("idParty")]
+        [HttpGet("{idParty}")]
         public List<ScoreArea> GetAreaWinScoreParty(string idParty)
         {
             var getData = Table4Collection.Find(it => it.IdParty == idParty).ToList()
