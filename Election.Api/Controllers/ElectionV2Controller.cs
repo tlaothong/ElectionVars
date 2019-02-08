@@ -18,6 +18,7 @@ namespace Election.Api.Controllers
         IMongoCollection<ScorePoll> ScorePollCollection { get; set; }
         IMongoCollection<ScoreArea> ScoreAreaCollection { get; set; }
         IMongoCollection<PartyList> PartyScoreCollection { get; set; }
+        IMongoCollection<ScorePollV2> ScorePollV3Collection { get; set; }
 
         public ElectionV2Controller()
         {
@@ -31,15 +32,15 @@ namespace Election.Api.Controllers
             ScorePollCollection = database.GetCollection<ScorePoll>("ScorePoll");
             ScoreAreaCollection = database.GetCollection<ScoreArea>("ScoreArea");
             PartyScoreCollection = database.GetCollection<PartyList>("PartyListScore");
+            ScorePollV3Collection = database.GetCollection<ScorePollV2>("ScorePollV3");
         }
 
         [HttpPost]
         public void MockDataScorePoll()
         {
-            ScorePollCollection.DeleteMany(it => true);
             var readerCsv = new ReadCsv();
             var rnd = new Random();
-            var listScorePoll = new List<ScorePoll>();
+            var listScorePoll = new List<ScorePollV2>();
             var dataPollCsv = readerCsv.MockDataScorePoll();
             var groupByArea = dataPollCsv.OrderBy(it => it.IdArea).GroupBy(it => it.IdArea).ToList();
             var goodScoreDefault = 0;
@@ -55,7 +56,7 @@ namespace Election.Api.Controllers
                     {
                         var scorePolls = Math.Round(data.Score * goodScoreDefault / 100.0);
                         var scoreTarget = (rnd.Next(0, 1) == 0) ? scorePolls + rnd.Next(1000, 2000) : scorePolls - rnd.Next(1000, 2000);
-                        listScorePoll.Add(new ScorePoll
+                        listScorePoll.Add(new ScorePollV2
                         {
                             Id = Guid.NewGuid().ToString(),
                             IdParty = data.IdParty,
@@ -69,7 +70,8 @@ namespace Election.Api.Controllers
                     }
                 }
             }
-            ScorePollCollection.InsertMany(listScorePoll);
+            ScorePollV3Collection.DeleteMany(it => true);
+            ScorePollV3Collection.InsertMany(listScorePoll);
         }
 
         [HttpPost]
@@ -129,7 +131,7 @@ namespace Election.Api.Controllers
         [HttpPost]
         public void CalculateScoreFromScorePoll()
         {
-            var getDataScorePoll = ScorePollCollection.Find(it => true).ToList();
+            var getDataScorePoll = ScorePollV3Collection.Find(it => true).ToList();
             var getDataScoreArea = ScoreAreaCollection.Find(it => true).ToList();
             var groupByArea = getDataScorePoll.GroupBy(it => it.IdArea).ToList();
             var listScoreArea = new List<ScoreArea>();
@@ -179,18 +181,18 @@ namespace Election.Api.Controllers
 
         // APi ScorePoll
         [HttpGet]
-        public List<ScorePoll> GetAllScorePoll()
+        public List<ScorePollV2> GetAllScorePoll()
         {
-            var getData = ScorePollCollection.Find(it => true).ToList();
+            var getData = ScorePollV3Collection.Find(it => true).ToList();
             var sortData = getData.OrderByDescending(it => it.datePoll).ToList();
             return sortData;
         }
 
         [HttpGet("{idArea}")]
-        public List<ScorePoll> GetListScoreArea(string idArea)
+        public List<ScorePollV2> GetListScoreArea(string idArea)
         {
             idArea.ToUpper();
-            var getData = ScorePollCollection.Find(it => it.IdArea == idArea.ToUpper()).ToList();
+            var getData = ScorePollV3Collection.Find(it => it.IdArea == idArea.ToUpper()).ToList();
             var sortData = getData.OrderByDescending(it => it.datePoll).ToList();
             return sortData;
         }
