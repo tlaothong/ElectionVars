@@ -57,21 +57,60 @@ namespace Election.Api.Controllers
             return listCurrentScorePollOfArea;
         }
 
-        // [HttpPost]
-        // public void UpdateScorePoll([FromBody]List<ScorePoll> scorePolls)
-        // {
-
-        //     foreach (var item in scorePolls)
-        //     {
-        //         item.datePoll = DateTime.Now;
-        //     }
-        //     ScorePollV2Collection.InsertMany(scorePolls);
-        // }
-
         [HttpGet]
         public List<ScoreArea> GetAllScoreTable4()
         {
-            return Table4Collection.Find(it => true).ToList();
+            var getData = Table4Collection.Find(it => true).ToList();
+            return getData;
+        }
+
+
+        [HttpPost("{id}")]
+        public void EditScore([FromBody]ScoreArea scorePartyModel, string id)
+        {
+            var getData = Table4Collection.Find(it => true).ToList();
+            var getParty = getData.FirstOrDefault(it => it.Id == id);
+            getParty.Score = scorePartyModel.Score;
+            Table4Collection.ReplaceOne(it => it.Id == getParty.Id, getParty);
+
+            var getDataUpdate = Table4Collection.Find(it => true).ToList();
+            var groupByArea = getData.GroupBy(it => it.IdArea).ToList();
+            var listUpdate = new List<ScoreArea>();
+            foreach (var item in groupByArea)
+            {
+                var maxScore = item.Max(it => it.Score);
+                foreach (var data in item)
+                {
+                    if (data.Score == maxScore)
+                    {
+                        if (data.Tags.Any(i => i != "ชนะ"))
+                        {
+                            data.Tags.Remove("แพ้");
+                            data.Tags.Add("ชนะ");
+                            listUpdate.Add(data);
+                        }
+                        else
+                        {
+                            listUpdate.Add(data);
+                        }
+                    }
+                    else
+                    {
+                        if (data.Tags.Any(i => i == "ชนะ"))
+                        {
+                            data.Tags.Remove("ชนะ");
+                            data.Tags.Add("แพ้");
+                            listUpdate.Add(data);
+                        }
+                        else
+                        {
+                            listUpdate.Add(data);
+                        }
+                    }
+                }
+            }
+            Table4Collection.DeleteMany(it => true);
+            Table4Collection.InsertMany(listUpdate);
         }
 
         [HttpGet]
@@ -102,7 +141,7 @@ namespace Election.Api.Controllers
             var listWinnerArea = new List<ScoreArea>();
             foreach (var item in getData)
             {
-                var getWinnerArea = item.FirstOrDefault(it => it.Score == item.Max(i=>i.Score));
+                var getWinnerArea = item.FirstOrDefault(it => it.Score == item.Max(i => i.Score));
                 listWinnerArea.Add(getWinnerArea);
             }
             return listWinnerArea.OrderBy(it => it.IdArea).ToList();
@@ -119,15 +158,6 @@ namespace Election.Api.Controllers
         public List<PartyList> GetAllPartyScore()
         {
             return PartyScoreCollection.Find(it => true).ToList().OrderByDescending(it => it.PercentScore).ToList();
-        }
-
-        [HttpPost("{id}")]
-        public void Edititem([FromBody]ScoreArea model,string id)
-        {
-            var data = Table4Collection.Find(x => x.Id == id).FirstOrDefault();
-            data.Score = model.Score;
-
-            Table4Collection.ReplaceOne(x => x.Id == data.Id, data);
         }
 
     }
