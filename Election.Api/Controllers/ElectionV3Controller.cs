@@ -102,7 +102,7 @@ namespace Election.Api.Controllers
             var listWinnerArea = new List<ScoreArea>();
             foreach (var item in getData)
             {
-                var getWinnerArea = item.FirstOrDefault(it => it.Tags.Any(i => i == "ชนะ"));
+                var getWinnerArea = item.FirstOrDefault(it => it.Score == item.Max(i=>i.Score));
                 listWinnerArea.Add(getWinnerArea);
             }
             return listWinnerArea.OrderBy(it => it.IdArea).ToList();
@@ -126,6 +126,7 @@ namespace Election.Api.Controllers
         {
             var data = Table4Collection.Find(x => x.Id == id).FirstOrDefault();
             data.Score = model.Score;
+
             Table4Collection.ReplaceOne(x => x.Id == data.Id, data);
         }
 
