@@ -47,10 +47,39 @@ namespace Election.Api.Controllers
             return Table4Collection.Find(it => true).ToList();
         }
 
+        [HttpGet("idParty")]
+        public List<ScoreArea> GetAreaWinScoreParty(string idParty)
+        {
+            var getData = Table4Collection.Find(it => it.IdParty == idParty).ToList()
+            .Where(it => it.Tags.Any(i => i == "ชนะ")).ToList();
+            return getData;
+        }
+
+        [HttpGet]
+        public List<ScoreArea> GetAllAreaMaxScore()
+        {
+            var getData = Table4Collection.Find(it => true).ToList().GroupBy(it => it.IdArea);
+            var listWinnerArea = new List<ScoreArea>();
+            foreach (var item in getData)
+            {
+                var getWinnerArea = item.FirstOrDefault(it => it.Tags.Any(i => i == "ชนะ"));
+                listWinnerArea.Add(getWinnerArea);
+            }
+            return listWinnerArea.OrderBy(it => it.IdArea).ToList();
+        }
+
+        [HttpGet("{idArea}")]
+        public List<ScoreArea> GetScoreAreasWithArea(string idArea)
+        {
+            var getData = Table4Collection.Find(it => it.IdArea == idArea.ToUpper()).ToList();
+            return getData;
+        }
+
         [HttpGet]
         public List<PartyList> GetAllPartyScore()
         {
             return PartyScoreCollection.Find(it => true).ToList().OrderByDescending(it => it.PercentScore).ToList();
         }
+
     }
 }
