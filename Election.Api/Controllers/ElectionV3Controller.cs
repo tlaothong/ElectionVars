@@ -19,6 +19,7 @@ namespace Election.Api.Controllers
         IMongoCollection<ScorePoll> ScorePollV2Collection { get; set; }
         IMongoCollection<ScoreArea> Table4Collection { get; set; }
         IMongoCollection<PartyList> PartyScoreCollection { get; set; }
+        IMongoCollection<ScorePollV2> ScorePollV3Collection { get; set; }
 
         public ElectionV3Controller()
         {
@@ -33,18 +34,57 @@ namespace Election.Api.Controllers
             ScorePollV2Collection = database.GetCollection<ScorePoll>("ScorePollV2");
             Table4Collection = database.GetCollection<ScoreArea>("Table4");
             PartyScoreCollection = database.GetCollection<PartyList>("PartyScore");
+            ScorePollV3Collection = database.GetCollection<ScorePollV2>("ScorePollV3");
         }
 
         [HttpGet]
-        public List<ScorePoll> GetAllScorePoll()
+        public List<ScorePollV2> GetAllScorePoll()
         {
-            return ScorePollV2Collection.Find(it => true).ToList();
+            return ScorePollV3Collection.Find(it => true).ToList();
         }
+
+        [HttpGet("{idArea}")]
+        public List<ScorePollV2> GetAreaScorePoll(string idArea)
+        {
+            var getData = ScorePollV3Collection.Find(it => it.IdArea == idArea.ToUpper()).ToList();
+            var groupByPart = getData.GroupBy(it => it.IdParty);
+            var listCurrentScorePollOfArea = new List<ScorePollV2>();
+            foreach (var item in groupByPart)
+            {
+                var getCurrent = item.OrderByDescending(it => it.datePoll).ToList().FirstOrDefault();
+                listCurrentScorePollOfArea.Add(getCurrent);
+            }
+            return listCurrentScorePollOfArea;
+        }
+
+        // [HttpPost]
+        // public void UpdateScorePoll([FromBody]List<ScorePoll> scorePolls)
+        // {
+
+        //     foreach (var item in scorePolls)
+        //     {
+        //         item.datePoll = DateTime.Now;
+        //     }
+        //     ScorePollV2Collection.InsertMany(scorePolls);
+        // }
 
         [HttpGet]
         public List<ScoreArea> GetAllScoreTable4()
         {
             return Table4Collection.Find(it => true).ToList();
+        }
+
+        [HttpGet]
+        public List<ScoreArea> GetAllArea()
+        {
+            var getData = Table4Collection.Find(it => true).ToList().GroupBy(it => it.IdArea).ToList();
+            var listArea = new List<ScoreArea>();
+            foreach (var item in getData)
+            {
+                var getArea = item.FirstOrDefault(it => it.IdArea == item.Key);
+                listArea.Add(getArea);
+            }
+            return listArea.OrderBy(it => it.IdArea).ToList();
         }
 
         [HttpGet("{idParty}")]

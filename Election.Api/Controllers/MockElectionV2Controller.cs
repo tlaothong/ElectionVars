@@ -19,6 +19,7 @@ namespace Election.Api.Controllers
         IMongoCollection<ScorePoll> ScorePollV2Collection { get; set; }
         IMongoCollection<ScoreArea> Table4Collection { get; set; }
         IMongoCollection<PartyList> PartyScoreCollection { get; set; }
+        IMongoCollection<ScorePollV2> ScorePollV3Collection { get; set; }
 
         public MockElectionV2Controller()
         {
@@ -33,6 +34,7 @@ namespace Election.Api.Controllers
             ScorePollV2Collection = database.GetCollection<ScorePoll>("ScorePollV2");
             Table4Collection = database.GetCollection<ScoreArea>("Table4");
             PartyScoreCollection = database.GetCollection<PartyList>("PartyScore");
+            ScorePollV3Collection = database.GetCollection<ScorePollV2>("ScorePollV3");
         }
 
         [HttpPost]
@@ -78,9 +80,9 @@ namespace Election.Api.Controllers
         [HttpPost]
         public void MockPrototypeTableScorePoll()
         {
-            var getData = ScorePollCsvCollection.Find(it => true).ToList();
+            var getData = ScorePollV3Collection.Find(it => true).ToList();
             var rnd = new Random();
-            var listScorePoll = new List<ScorePoll>();
+            var listScorePoll = new List<ScorePollV2>();
             foreach (var item in getData)
             {
                 if (item.IdParty != "999")
@@ -89,7 +91,7 @@ namespace Election.Api.Controllers
                     {
                         var randomDiff = rnd.Next(500, 3500);
                         var ScoreTarget = (rnd.Next(0, 1) == 0) ? item.Score + randomDiff : item.Score - randomDiff;
-                        listScorePoll.Add(new ScorePoll
+                        listScorePoll.Add(new ScorePollV2
                         {
                             Id = Guid.NewGuid().ToString(),
                             IdParty = item.IdParty,
@@ -103,7 +105,7 @@ namespace Election.Api.Controllers
                     }
                     else
                     {
-                        listScorePoll.Add(new ScorePoll
+                        listScorePoll.Add(new ScorePollV2
                         {
                             Id = Guid.NewGuid().ToString(),
                             IdParty = item.IdParty,
@@ -117,13 +119,13 @@ namespace Election.Api.Controllers
                     }
                 }
             }
-            ScorePollV2Collection.InsertMany(listScorePoll);
+            ScorePollV3Collection.InsertMany(listScorePoll);
         }
 
         [HttpPost]
         public void MockPrototypeScoreTable4()
         {
-            var getData = ScorePollV2Collection.Find(it => true).ToList();
+            var getData = ScorePollV3Collection.Find(it => true).ToList();
             var groupByArea = getData.GroupBy(it => it.IdArea).ToList();
             var listScoreTable4 = new List<ScoreArea>();
             foreach (var item in groupByArea)
@@ -145,6 +147,7 @@ namespace Election.Api.Controllers
                     }
                 }
             }
+            Table4Collection.DeleteMany(it => true);
             Table4Collection.InsertMany(listScoreTable4);
         }
 
@@ -248,6 +251,93 @@ namespace Election.Api.Controllers
                 PercentScore = sumPercentScore
             };
             return partyScore;
+        }
+
+        [HttpPost]
+        public void MockPrototypeTableScorePollV2()
+        {
+            var getData = ScorePollCsvCollection.Find(it => true).ToList();
+            var rnd = new Random();
+            var listScorePoll = new List<ScorePollV2>();
+            foreach (var item in getData)
+            {
+                if (item.IdParty != "999")
+                {
+                    if (item.IdParty != "000" && item.IdParty != "888")
+                    {
+                        var randomDiff = rnd.Next(500, 3500);
+                        var ScoreTarget = (rnd.Next(0, 1) == 0) ? item.Score + randomDiff : item.Score - randomDiff;
+                        listScorePoll.Add(new ScorePollV2
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            IdParty = item.IdParty,
+                            NameParty = item.NameParty,
+                            IdArea = item.IdArea,
+                            NameArea = item.NameArea,
+                            datePoll = new DateTime(2019, 1, 1),
+                            Score = item.Score,
+                            Source = "Poll",
+                            TargetScoreDefault = ScoreTarget,
+                            TargetScore = ScoreTarget
+                        });
+                    }
+                    else
+                    {
+                        listScorePoll.Add(new ScorePollV2
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            IdParty = item.IdParty,
+                            NameParty = item.NameParty,
+                            IdArea = item.IdArea,
+                            NameArea = item.NameArea,
+                            datePoll = new DateTime(2019, 1, 1),
+                            Score = item.Score,
+                            Source = "Poll",
+                            TargetScoreDefault = 0,
+                            TargetScore = 0
+                        });
+                    }
+                }
+            }
+            ScorePollV3Collection.InsertMany(listScorePoll);
+        }
+
+        [HttpPost]
+        public void AddPercentScorePoll()
+        {
+            var getData = ScorePollV3Collection.Find(it => true).ToList().GroupBy(it => it.IdArea);
+            var listNewScorePoll = new List<ScorePollV2>();
+            foreach (var item in getData)
+            {
+                var groupByArea = item.GroupBy(it => it.IdParty).ToList();
+                var listCurrent = new List<ScorePollV2>();
+                foreach (var dataParty in groupByArea)
+                {
+                    var getCuurent = dataParty.OrderByDescending(it => it.datePoll).ToList().FirstOrDefault();
+                    listCurrent.Add(getCuurent);
+                }
+                var totalScoreArea = listCurrent.Sum(it => it.Score);
+                foreach (var data in listCurrent)
+                {
+                    var percent = data.Score * 100.0 / totalScoreArea;
+                    listNewScorePoll.Add(new ScorePollV2
+                    {
+                        Id = data.Id,
+                        IdParty = data.IdParty,
+                        NameParty = data.NameParty,
+                        IdArea = data.IdArea,
+                        NameArea = data.NameArea,
+                        datePoll = data.datePoll,
+                        Score = data.Score,
+                        PercentScore = percent,
+                        Source = data.Source,
+                        TargetScoreDefault = data.TargetScoreDefault,
+                        TargetScore = data.TargetScore
+                    });
+                }
+            }
+            ScorePollV3Collection.DeleteMany(it => true);
+            ScorePollV3Collection.InsertMany(listNewScorePoll);
         }
     }
 }
