@@ -159,7 +159,25 @@ namespace Election.Api.Controllers
         {
             return PartyScoreCollection.Find(it => true).ToList().OrderByDescending(it => it.PercentScore).ToList();
         }
+        
+        [HttpPost("{id}")]
+        public void Edititem([FromBody]ScoreArea model,string id)
+        {
+            var data = Table4Collection.Find(x => x.Id == id).FirstOrDefault();
+            data.Score = model.Score;
 
+            Table4Collection.ReplaceOne(x => x.Id == data.Id, data);
+        }
+
+        //[HttpPost]
+        //public void File()
+        //{
+        //    using (StreamReader stream = new StreamReader(Request.Form.Files.FirstOrDefault().OpenReadStream()))
+        //    {
+        //        var xx = stream.ReadLine();
+        //    }
+        //}
+        
     }
 }
 
