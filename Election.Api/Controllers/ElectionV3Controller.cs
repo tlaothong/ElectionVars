@@ -130,6 +130,15 @@ namespace Election.Api.Controllers
             Table4Collection.ReplaceOne(x => x.Id == data.Id, data);
         }
 
+        //[HttpPost]
+        //public void File()
+        //{
+        //    using (StreamReader stream = new StreamReader(Request.Form.Files.FirstOrDefault().OpenReadStream()))
+        //    {
+        //        var xx = stream.ReadLine();
+        //    }
+        //}
+
     }
 }
 
