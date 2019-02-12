@@ -43,7 +43,7 @@ namespace Election.Api.Controllers
             var listScorePoll = new List<ScorePollV2>();
             var dataPollCsv = readerCsv.MockDataScorePoll();
             var groupByArea = dataPollCsv.OrderBy(it => it.IdArea).GroupBy(it => it.IdArea).ToList();
-            var goodScoreDefault = 0;
+            var goodScoreDefault = 0.0;
             foreach (var item in groupByArea)
             {
                 foreach (var data in item)

@@ -20,6 +20,7 @@ namespace Election.Api.Controllers
         IMongoCollection<ScoreArea> Table4Collection { get; set; }
         IMongoCollection<PartyList> PartyScoreCollection { get; set; }
         IMongoCollection<ScorePollV2> ScorePollV3Collection { get; set; }
+        IMongoCollection<ScorePollV2> ScorePollV4Collection { get; set; }
 
         public ElectionV3Controller()
         {
@@ -35,21 +36,22 @@ namespace Election.Api.Controllers
             Table4Collection = database.GetCollection<ScoreArea>("Table4");
             PartyScoreCollection = database.GetCollection<PartyList>("PartyScore");
             ScorePollV3Collection = database.GetCollection<ScorePollV2>("ScorePollV3");
+            ScorePollV4Collection = database.GetCollection<ScorePollV2>("ScorePollV4");
         }
 
         [HttpGet]
         public List<ScorePollV2> GetAllScorePoll()
         {
-            return ScorePollV3Collection.Find(it => true).ToList();
+            return ScorePollV4Collection.Find(it => true).ToList();
         }
 
         [HttpGet("{idArea}")]
         public List<ScorePollV2> GetAreaScorePoll(string idArea)
         {
-            var getData = ScorePollV3Collection.Find(it => it.IdArea == idArea.ToUpper()).ToList();
-            var groupByPart = getData.GroupBy(it => it.IdParty);
+            var getData = ScorePollV4Collection.Find(it => it.IdArea == idArea.ToUpper()).ToList();
+            var groupByParty = getData.GroupBy(it => it.IdParty);
             var listCurrentScorePollOfArea = new List<ScorePollV2>();
-            foreach (var item in groupByPart)
+            foreach (var item in groupByParty)
             {
                 var getCurrent = item.OrderByDescending(it => it.datePoll).ToList().FirstOrDefault();
                 listCurrentScorePollOfArea.Add(getCurrent);
@@ -87,10 +89,12 @@ namespace Election.Api.Controllers
                         {
                             data.Tags.Remove("แพ้");
                             data.Tags.Add("ชนะ");
+                            data.StatusEdit = true;
                             listUpdate.Add(data);
                         }
                         else
                         {
+                            data.StatusEdit = true;
                             listUpdate.Add(data);
                         }
                     }
@@ -100,10 +104,12 @@ namespace Election.Api.Controllers
                         {
                             data.Tags.Remove("ชนะ");
                             data.Tags.Add("แพ้");
+                            data.StatusEdit = true;
                             listUpdate.Add(data);
                         }
                         else
                         {
+                            data.StatusEdit = true;
                             listUpdate.Add(data);
                         }
                     }
@@ -159,25 +165,122 @@ namespace Election.Api.Controllers
         {
             return PartyScoreCollection.Find(it => true).ToList().OrderByDescending(it => it.PercentScore).ToList();
         }
-        
-        [HttpPost("{id}")]
-        public void Edititem([FromBody]ScoreArea model,string id)
-        {
-            var data = Table4Collection.Find(x => x.Id == id).FirstOrDefault();
-            data.Score = model.Score;
 
-            Table4Collection.ReplaceOne(x => x.Id == data.Id, data);
+        // [HttpPost("{id}")]
+        // public void Edititem([FromBody]ScoreArea model, string id)
+        // {
+        //     var data = Table4Collection.Find(x => x.Id == id).FirstOrDefault();
+        //     data.Score = model.Score;
+
+        //     Table4Collection.ReplaceOne(x => x.Id == data.Id, data);
+        // }
+
+        [HttpPost]
+        public void UploadFile()
+        {
+            // Read
+            var listScoreCsv = new List<ScorePollCsv>();
+            using (var csvReader = new StreamReader(Request.Form.Files.FirstOrDefault().OpenReadStream()))
+            {
+                var getFormCsv = csvReader.ReadLine();
+                var getLine = getFormCsv.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                foreach (var item in getLine)
+                {
+                    var getData = item.Split(',').ToList();
+                    if (getData[0] != "รหัสพรรค" && getData[1] != "ชื่อเขต" &&
+                    getData[2] != "รหัสเขต " && getData[3] != "ชื่อพรรค" && getData[4] != "เปอร์เซ็น/คะแนน"
+                    && getData[5] != "ภูมิภาค")
+                    {
+                        Double.TryParse(getData[4], out Double score);
+                        listScoreCsv.Add(new ScorePollCsv
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            IdParty = getData[0],
+                            NameParty = getData[3],
+                            IdArea = getData[2],
+                            NameArea = getData[1],
+                            Score = score,
+                            Region = getData[5]
+                        });
+                    }
+                }
+            }
+            // Fill in ScorePoll
+            var groupByArea = listScoreCsv.GroupBy(it => it.IdArea).ToList();
+            var listScorePoll = new List<ScorePollV2>();
+            foreach (var getList in groupByArea)
+            {
+                var totalScore = getList.FirstOrDefault(it => it.IdParty == "999").Score;
+                foreach (var datas in getList)
+                {
+                    if (datas.IdParty != "999")
+                    {
+                        var ScoreParty = datas.Score / 100.0 * totalScore;
+                        listScorePoll.Add(new ScorePollV2
+                        {
+                            Id = datas.Id,
+                            IdParty = datas.IdParty,
+                            NameParty = datas.NameParty,
+                            IdArea = datas.IdArea,
+                            NameArea = datas.NameArea,
+                            datePoll = DateTime.Now,
+                            Score = ScoreParty,
+                            PercentScore = datas.Score,
+                            Source = "Poll"
+                        });
+                    }
+                }
+            }
+            ScorePollV4Collection.InsertMany(listScorePoll);
+            //update Score Table 4
+            var getDataFromScorePoll = ScorePollV4Collection.Find(it => true).ToList();
+            var getTable4 = Table4Collection.Find(it => true).ToList();
+            var listTable4 = new List<ScoreArea>();
+            var groupByAreaTable4 = getDataFromScorePoll.GroupBy(it => it.IdArea).ToList();
+            foreach (var item in groupByAreaTable4)
+            {
+                var groupByParty = item.GroupBy(it => it.IdParty).ToList();
+                foreach (var datas in groupByParty)
+                {
+                    var getCurrentData = datas.OrderByDescending(it => it.datePoll).FirstOrDefault();
+                    var getTable4Update = getTable4.FirstOrDefault(it => it.IdArea == getCurrentData.IdArea && it.IdParty == getCurrentData.IdParty);
+                    getTable4Update.Score = getCurrentData.Score;
+                    Table4Collection.ReplaceOne(it => it.Id == getTable4Update.Id, getTable4Update);
+                }
+            }
         }
 
-        //[HttpPost]
-        //public void File()
-        //{
-        //    using (StreamReader stream = new StreamReader(Request.Form.Files.FirstOrDefault().OpenReadStream()))
-        //    {
-        //        var xx = stream.ReadLine();
-        //    }
-        //}
-        
+        [HttpPost]
+        public void SetTags()
+        {
+            var getData = Table4Collection.Find(it => true).ToList().GroupBy(it => it.IdArea).ToList();
+            foreach (var data in getData)
+            {
+                var maxScoreOfArea = data.Max(it => it.Score);
+                foreach (var item in data)
+                {
+                    var tagDefault = (item.Score == maxScoreOfArea) ? "ชนะ" : "แพ้";
+                    var updateTag = new ScoreArea
+                    {
+                        Id = item.Id,
+                        IdArea = item.IdArea,
+                        NameArea = item.NameArea,
+                        IdParty = item.IdParty,
+                        NameParty = item.NameParty,
+                        NoRegister = item.NoRegister,
+                        NameRegister = item.NameRegister,
+                        Status = item.Status,
+                        NameInitial = item.IdArea,
+                        Tags = { tagDefault },
+                        Score = item.Score,
+                        Source = item.Source,
+                        StatusEdit = false,
+                    };
+                    Table4Collection.ReplaceOne(it => it.Id == item.Id, updateTag);
+                }
+            }
+        }
+
     }
 }
 
