@@ -188,26 +188,29 @@ namespace Election.Api.Controllers
             var listScoreCsv = new List<ScorePollCsv>();
             using (var csvReader = new StreamReader(Request.Form.Files.FirstOrDefault().OpenReadStream()))
             {
-                var getFormCsv = csvReader.ReadLine();
-                var getLine = getFormCsv.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList();
-                foreach (var item in getLine)
+                while (!csvReader.EndOfStream)
                 {
-                    var getData = item.Split(',').ToList();
-                    if (getData[0] != "รหัสพรรค" && getData[1] != "ชื่อเขต" &&
-                    getData[2] != "รหัสเขต " && getData[3] != "ชื่อพรรค" && getData[4] != "เปอร์เซ็น/คะแนน"
-                    && getData[5] != "ภูมิภาค")
+                    var getFormCsv = csvReader.ReadLine();
+                    var getLine = getFormCsv.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                    foreach (var item in getLine)
                     {
-                        Double.TryParse(getData[4], out Double score);
-                        listScoreCsv.Add(new ScorePollCsv
+                        var getData = item.Split(',').ToList();
+                        if (getData[0] != "รหัสพรรค" && getData[1] != "ชื่อเขต" &&
+                        getData[2] != "รหัสเขต " && getData[3] != "ชื่อพรรค" && getData[4] != "เปอร์เซ็น/คะแนน"
+                        && getData[5] != "ภูมิภาค")
                         {
-                            Id = Guid.NewGuid().ToString(),
-                            IdParty = getData[0],
-                            NameParty = getData[3],
-                            IdArea = getData[2],
-                            NameArea = getData[1],
-                            Score = score,
-                            Region = getData[5]
-                        });
+                            Double.TryParse(getData[4], out Double score);
+                            listScoreCsv.Add(new ScorePollCsv
+                            {
+                                Id = Guid.NewGuid().ToString(),
+                                IdParty = getData[0],
+                                NameParty = getData[3],
+                                IdArea = getData[2],
+                                NameArea = getData[1],
+                                Score = score,
+                                Region = getData[5]
+                            });
+                        }
                     }
                 }
             }
@@ -240,7 +243,7 @@ namespace Election.Api.Controllers
             ScorePollV4Collection.InsertMany(listScorePoll);
             //update Score Table 4
             var getDataFromScorePoll = ScorePollV4Collection.Find(it => true).ToList();
-            var getTable4 = TestTable4Collection.Find(it => true).ToList();
+            var getTable4 = Table4Collection.Find(it => true).ToList();
             var listTable4 = new List<ScoreArea>();
             var groupByAreaTable4 = getDataFromScorePoll.GroupBy(it => it.IdArea).ToList();
             foreach (var item in groupByAreaTable4)
@@ -251,16 +254,15 @@ namespace Election.Api.Controllers
                     var getCurrentData = datas.OrderByDescending(it => it.datePoll).FirstOrDefault();
                     var getTable4Update = getTable4.FirstOrDefault(it => it.IdArea == getCurrentData.IdArea && it.IdParty == getCurrentData.IdParty);
                     getTable4Update.Score = getCurrentData.Score;
-                    TestTable4Collection.ReplaceOne(it => it.Id == getTable4Update.Id, getTable4Update);
+                    Table4Collection.ReplaceOne(it => it.Id == getTable4Update.Id, getTable4Update);
                 }
             }
-            //update Show Score Party
         }
 
         [HttpPost]
         public void SetTags()
         {
-            var getData = TestTable4Collection.Find(it => true).ToList().GroupBy(it => it.IdArea).ToList();
+            var getData = Table4Collection.Find(it => true).ToList().GroupBy(it => it.IdArea).ToList();
             foreach (var data in getData)
             {
                 var maxScoreOfArea = data.Max(it => it.Score);
@@ -283,7 +285,7 @@ namespace Election.Api.Controllers
                         Source = item.Source,
                         StatusEdit = false,
                     };
-                    TestTable4Collection.ReplaceOne(it => it.Id == item.Id, updateTag);
+                    Table4Collection.ReplaceOne(it => it.Id == item.Id, updateTag);
                 }
             }
         }
@@ -291,7 +293,7 @@ namespace Election.Api.Controllers
         [HttpPost]
         public void TestDataScoreParty()
         {
-            var getData = TestTable4Collection.Find(it => true).ToList();
+            var getData = Table4Collection.Find(it => true).ToList();
             var listParty = new List<PartyList>();
             var totalScore = getData.Sum(it => it.Score);
             var groupByParty = getData.GroupBy(it => it.IdParty).ToList();
