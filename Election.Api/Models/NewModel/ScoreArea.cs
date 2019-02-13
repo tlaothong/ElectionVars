@@ -20,5 +20,6 @@ namespace Election.Api.Models
         public double Score { get; set; }
         public string Source { get; set; }
         public bool StatusEdit { get; set; }
+        public bool StatusAreaEdit { get; set; }
     }
 }

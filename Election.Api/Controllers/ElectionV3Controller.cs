@@ -76,11 +76,13 @@ namespace Election.Api.Controllers
         [HttpPost("{id}")]
         public void EditScore([FromBody]ScoreArea scorePartyModel, string id)
         {
-            var getData = Table4Collection.Find(it => true).ToList();
-            var getParty = getData.FirstOrDefault(it => it.Id == id);
+            // var getData = Table4Collection.Find(it => true).ToList();
+            // var getParty = getData.FirstOrDefault(it => it.Id == id);
+            var getParty = Table4Collection.Find(it => it.Id == id).FirstOrDefault();
             getParty.Score = scorePartyModel.Score;
+            getParty.StatusEdit= true;
             Table4Collection.ReplaceOne(it => it.Id == getParty.Id, getParty);
-
+            //set status Area Edit
             var getDataUpdate = Table4Collection.Find(it => true).ToList();
             var groupByArea = getDataUpdate.GroupBy(it => it.IdArea).ToList();
             foreach (var item in groupByArea)
@@ -89,12 +91,12 @@ namespace Election.Api.Controllers
                 {
                     foreach (var datas in item)
                     {
-                        datas.StatusEdit = true;
+                        datas.StatusAreaEdit = true;
                         Table4Collection.ReplaceOne(it => it.Id == datas.Id, datas);
                     }
                 }
             }
-
+            // set tag
             var getDataUpdate2 = Table4Collection.Find(it => true).ToList();
             var groupByArea2 = getDataUpdate2.GroupBy(it => it.IdArea).ToList();
             var listUpdate = new List<ScoreArea>();
@@ -173,7 +175,7 @@ namespace Election.Api.Controllers
                     PartyWin = getWinnerArea.NameParty,
                     scoreMax = getWinnerArea.Score,
                     scoreMyParty = getMyParty.Score,
-                    StatusEdit = getMyParty.StatusEdit
+                    StatusAreaEdit = getMyParty.StatusAreaEdit
                 });
             }
             var sortData = listScore.OrderBy(it => it.IdArea).ToList();
@@ -269,6 +271,7 @@ namespace Election.Api.Controllers
                     var getTable4Update = getTable4.FirstOrDefault(it => it.IdArea == getCurrentData.IdArea && it.IdParty == getCurrentData.IdParty);
                     getTable4Update.Score = getCurrentData.Score;
                     getTable4Update.StatusEdit = false;
+                    getTable4Update.StatusAreaEdit = false;
                     listTable4.Add(getTable4Update);
                 }
             }
