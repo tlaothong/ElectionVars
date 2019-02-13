@@ -21,7 +21,7 @@ namespace Election.Api.Controllers
         IMongoCollection<PartyList> PartyScoreCollection { get; set; }
         IMongoCollection<ScorePollV2> ScorePollV3Collection { get; set; }
         // test
-        IMongoCollection<ScorePollV2> ScorePollV4Collection { get; set; }
+        IMongoCollection<ScorePollV2> FinalScorePollCollection { get; set; }
         IMongoCollection<ScoreArea> TestTable4Collection { get; set; }
         IMongoCollection<PartyList> TestPartyScoreCollection { get; set; }
 
@@ -40,21 +40,21 @@ namespace Election.Api.Controllers
             PartyScoreCollection = database.GetCollection<PartyList>("PartyScore");
             ScorePollV3Collection = database.GetCollection<ScorePollV2>("ScorePollV3");
             // Test
-            ScorePollV4Collection = database.GetCollection<ScorePollV2>("ScorePollV4");
-            TestTable4Collection = database.GetCollection<ScoreArea>("TestTable4");
-            TestPartyScoreCollection = database.GetCollection<PartyList>("TestPartyScore");
+            FinalScorePollCollection = database.GetCollection<ScorePollV2>("FinalScorePoll");
+            // TestTable4Collection = database.GetCollection<ScoreArea>("FinalTable4");
+            TestPartyScoreCollection = database.GetCollection<PartyList>("FinalPartyScore");
         }
 
         [HttpGet]
         public List<ScorePollV2> GetAllScorePoll()
         {
-            return ScorePollV4Collection.Find(it => true).ToList();
+            return FinalScorePollCollection.Find(it => true).ToList();
         }
 
         [HttpGet("{idArea}")]
         public List<ScorePollV2> GetAreaScorePoll(string idArea)
         {
-            var getData = ScorePollV4Collection.Find(it => it.IdArea == idArea.ToUpper()).ToList();
+            var getData = FinalScorePollCollection.Find(it => it.IdArea == idArea.ToUpper()).ToList();
             var groupByParty = getData.GroupBy(it => it.IdParty);
             var listCurrentScorePollOfArea = new List<ScorePollV2>();
             foreach (var item in groupByParty)
@@ -224,7 +224,7 @@ namespace Election.Api.Controllers
                 {
                     if (datas.IdParty != "999")
                     {
-                        var ScoreParty = datas.Score / 100.0 * totalScore;
+                        var ScoreParty = Math.Round(datas.Score / 100.0 * totalScore);
                         listScorePoll.Add(new ScorePollV2
                         {
                             Id = datas.Id,
@@ -240,9 +240,9 @@ namespace Election.Api.Controllers
                     }
                 }
             }
-            ScorePollV4Collection.InsertMany(listScorePoll);
+            FinalScorePollCollection.InsertMany(listScorePoll);
             //update Score Table 4
-            var getDataFromScorePoll = ScorePollV4Collection.Find(it => true).ToList();
+            var getDataFromScorePoll = FinalScorePollCollection.Find(it => true).ToList();
             var getTable4 = Table4Collection.Find(it => true).ToList();
             var listTable4 = new List<ScoreArea>();
             var groupByAreaTable4 = getDataFromScorePoll.GroupBy(it => it.IdArea).ToList();
@@ -254,9 +254,12 @@ namespace Election.Api.Controllers
                     var getCurrentData = datas.OrderByDescending(it => it.datePoll).FirstOrDefault();
                     var getTable4Update = getTable4.FirstOrDefault(it => it.IdArea == getCurrentData.IdArea && it.IdParty == getCurrentData.IdParty);
                     getTable4Update.Score = getCurrentData.Score;
-                    Table4Collection.ReplaceOne(it => it.Id == getTable4Update.Id, getTable4Update);
+                    listTable4.Add(getTable4Update);
+                    // Table4Collection.ReplaceOne(it => it.Id == getTable4Update.Id, getTable4Update);
                 }
             }
+            Table4Collection.DeleteMany(it => true);
+            Table4Collection.InsertMany(listTable4);
         }
 
         [HttpPost]
