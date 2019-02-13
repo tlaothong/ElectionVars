@@ -215,6 +215,14 @@ namespace Election.Api.Controllers
                 }
             }
             // Fill in ScorePoll
+            FillDataIntoScorePollTable(listScoreCsv);
+            //update Score Table 4
+            UpdateTable4();
+            SetTags();
+        }
+
+        public void FillDataIntoScorePollTable(List<ScorePollCsv> listScoreCsv)
+        {
             var groupByArea = listScoreCsv.GroupBy(it => it.IdArea).ToList();
             var listScorePoll = new List<ScorePollV2>();
             foreach (var getList in groupByArea)
@@ -241,7 +249,10 @@ namespace Election.Api.Controllers
                 }
             }
             FinalScorePollCollection.InsertMany(listScorePoll);
-            //update Score Table 4
+        }
+
+        public void UpdateTable4()
+        {
             var getDataFromScorePoll = FinalScorePollCollection.Find(it => true).ToList();
             var getTable4 = Table4Collection.Find(it => true).ToList();
             var listTable4 = new List<ScoreArea>();
@@ -262,7 +273,6 @@ namespace Election.Api.Controllers
             Table4Collection.InsertMany(listTable4);
         }
 
-        [HttpPost]
         public void SetTags()
         {
             var getData = Table4Collection.Find(it => true).ToList().GroupBy(it => it.IdArea).ToList();
