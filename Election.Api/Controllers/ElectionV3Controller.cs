@@ -82,9 +82,23 @@ namespace Election.Api.Controllers
             Table4Collection.ReplaceOne(it => it.Id == getParty.Id, getParty);
 
             var getDataUpdate = Table4Collection.Find(it => true).ToList();
-            var groupByArea = getData.GroupBy(it => it.IdArea).ToList();
-            var listUpdate = new List<ScoreArea>();
+            var groupByArea = getDataUpdate.GroupBy(it => it.IdArea).ToList();
             foreach (var item in groupByArea)
+            {
+                if (item.Key == getParty.IdArea)
+                {
+                    foreach (var datas in item)
+                    {
+                        datas.StatusEdit = true;
+                        Table4Collection.ReplaceOne(it => it.Id == datas.Id, datas);
+                    }
+                }
+            }
+
+            var getDataUpdate2 = Table4Collection.Find(it => true).ToList();
+            var groupByArea2 = getDataUpdate2.GroupBy(it => it.IdArea).ToList();
+            var listUpdate = new List<ScoreArea>();
+            foreach (var item in groupByArea2)
             {
                 var maxScore = item.Max(it => it.Score);
                 foreach (var data in item)
@@ -95,12 +109,10 @@ namespace Election.Api.Controllers
                         {
                             data.Tags.Remove("แพ้");
                             data.Tags.Add("ชนะ");
-                            data.StatusEdit = true;
                             listUpdate.Add(data);
                         }
                         else
                         {
-                            data.StatusEdit = true;
                             listUpdate.Add(data);
                         }
                     }
@@ -110,12 +122,10 @@ namespace Election.Api.Controllers
                         {
                             data.Tags.Remove("ชนะ");
                             data.Tags.Add("แพ้");
-                            data.StatusEdit = true;
                             listUpdate.Add(data);
                         }
                         else
                         {
-                            data.StatusEdit = true;
                             listUpdate.Add(data);
                         }
                     }
@@ -147,16 +157,27 @@ namespace Election.Api.Controllers
         }
 
         [HttpGet]
-        public List<ScoreArea> GetAllAreaMaxScore()
+        public List<MyParty> GetMaxScoreAndMyScore()
         {
             var getData = Table4Collection.Find(it => true).ToList().GroupBy(it => it.IdArea);
-            var listWinnerArea = new List<ScoreArea>();
+            var listScore = new List<MyParty>();
             foreach (var item in getData)
             {
                 var getWinnerArea = item.FirstOrDefault(it => it.Score == item.Max(i => i.Score));
-                listWinnerArea.Add(getWinnerArea);
+                var getMyParty = item.FirstOrDefault(it => it.IdParty == "034");
+                listScore.Add(new MyParty
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    IdArea = item.Key,
+                    NameArea = getMyParty.NameArea,
+                    PartyWin = getWinnerArea.NameParty,
+                    scoreMax = getWinnerArea.Score,
+                    scoreMyParty = getMyParty.Score,
+                    StatusEdit = getMyParty.StatusEdit
+                });
             }
-            return listWinnerArea.OrderBy(it => it.IdArea).ToList();
+            var sortData = listScore.OrderBy(it => it.IdArea).ToList();
+            return sortData;
         }
 
         [HttpGet("{idArea}")]
@@ -307,7 +328,7 @@ namespace Election.Api.Controllers
                 var percentScoreParty = item.Sum(it => it.Score) * 100.0 / totalScore;
                 var haveScore = Math.Round(percentScoreParty / 100.0 * 500);
                 var areaScore = item.Count(it => it.Tags.Any(i => i == "ชนะ"));
-                var scorePartyList = (haveScore - areaScore >= 0)? haveScore - areaScore: 0;
+                var scorePartyList = (haveScore - areaScore >= 0) ? haveScore - areaScore : 0;
                 var getOneData = item.FirstOrDefault();
                 listParty.Add(new PartyList
                 {
