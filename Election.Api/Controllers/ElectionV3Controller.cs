@@ -221,6 +221,7 @@ namespace Election.Api.Controllers
             SetTags();
         }
 
+        [HttpPost]
         public void FillDataIntoScorePollTable(List<ScorePollCsv> listScoreCsv)
         {
             var groupByArea = listScoreCsv.GroupBy(it => it.IdArea).ToList();
@@ -251,6 +252,7 @@ namespace Election.Api.Controllers
             FinalScorePollCollection.InsertMany(listScorePoll);
         }
 
+        [HttpPost]
         public void UpdateTable4()
         {
             var getDataFromScorePoll = FinalScorePollCollection.Find(it => true).ToList();
@@ -273,6 +275,7 @@ namespace Election.Api.Controllers
             Table4Collection.InsertMany(listTable4);
         }
 
+        [HttpPost]
         public void SetTags()
         {
             var getData = Table4Collection.Find(it => true).ToList().GroupBy(it => it.IdArea).ToList();
