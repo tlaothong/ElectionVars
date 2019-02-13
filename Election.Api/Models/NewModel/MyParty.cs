@@ -12,6 +12,6 @@ namespace Election.Api.Models
         public string PartyWin { get; set; }
         public double scoreMax { get; set; }
         public double scoreMyParty { get; set; }
-        public bool StatusEdit { get; set; }
+        public bool StatusAreaEdit { get; set; }
     }
 }
