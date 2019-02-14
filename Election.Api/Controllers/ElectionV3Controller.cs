@@ -73,7 +73,7 @@ namespace Election.Api.Controllers
         }
 
 
-        [HttpPost("{id}")]
+        [HttpPost("{newScore}")]
         public void EditScore([FromBody]ScoreArea scorePartyModel, double newScore)
         {
             var getParty = Table4Collection.Find(it => it.Id == scorePartyModel.Id).FirstOrDefault();
