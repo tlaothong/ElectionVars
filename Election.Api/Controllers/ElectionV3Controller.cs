@@ -80,7 +80,7 @@ namespace Election.Api.Controllers
             // var getParty = getData.FirstOrDefault(it => it.Id == id);
             var getParty = Table4Collection.Find(it => it.Id == id).FirstOrDefault();
             getParty.Score = scorePartyModel.Score;
-            getParty.StatusEdit= true;
+            getParty.StatusEdit = true;
             Table4Collection.ReplaceOne(it => it.Id == getParty.Id, getParty);
             //set status Area Edit
             var getDataUpdate = Table4Collection.Find(it => true).ToList();
@@ -135,6 +135,32 @@ namespace Election.Api.Controllers
             }
             Table4Collection.DeleteMany(it => true);
             Table4Collection.InsertMany(listUpdate);
+            //update score Have
+            var getDataT42 = Table4Collection.Find(it => true).ToList();
+            var listParty = new List<PartyList>();
+            var totalScore = getDataT42.Sum(it => it.Score);
+            var groupByParty = getDataT42.GroupBy(it => it.IdParty).ToList();
+            foreach (var item in groupByParty)
+            {
+                var percentScoreParty = item.Sum(it => it.Score) * 100.0 / totalScore;
+                var haveScore = Math.Round(percentScoreParty / 100.0 * 500);
+                var areaScore = item.Count(it => it.Tags.Any(i => i == "ชนะ"));
+                var scorePartyList = (haveScore - areaScore >= 0) ? haveScore - areaScore : 0;
+                var getOneData = item.FirstOrDefault();
+                listParty.Add(new PartyList
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    IdParty = getOneData.IdParty,
+                    PartyName = getOneData.NameParty,
+                    TotalScore = haveScore,
+                    AreaScore = areaScore,
+                    NameListScore = scorePartyList,
+                    PercentScore = percentScoreParty
+                });
+            }
+            FinalPartyScoreCollection.DeleteMany(it => true);
+            var sortData = listParty.OrderByDescending(it => it.PercentScore).ToList();
+            FinalPartyScoreCollection.InsertMany(sortData);
         }
 
         [HttpGet]
@@ -234,12 +260,12 @@ namespace Election.Api.Controllers
             var listScorePoll = new List<ScorePollV2>();
             foreach (var getList in groupByArea)
             {
-                var totalScore = getList.FirstOrDefault(it => it.IdParty == "999").Score;
+                var totalScore1 = getList.FirstOrDefault(it => it.IdParty == "999").Score;
                 foreach (var datas in getList)
                 {
                     if (datas.IdParty != "999")
                     {
-                        var ScoreParty = Math.Round(datas.Score / 100.0 * totalScore);
+                        var ScoreParty = Math.Round(datas.Score / 100.0 * totalScore1);
                         listScorePoll.Add(new ScorePollV2
                         {
                             Id = datas.Id,
@@ -317,16 +343,12 @@ namespace Election.Api.Controllers
             }
             Table4Collection.DeleteMany(it => true);
             Table4Collection.InsertMany(listUpdateTag);
-        }
-
-        [HttpPost]
-        public void UpdatePartyScore()
-        {
-            var getData = Table4Collection.Find(it => true).ToList();
+            // update Score Have
+            var getDataT42 = Table4Collection.Find(it => true).ToList();
             var listParty = new List<PartyList>();
-            var totalScore = getData.Sum(it => it.Score);
-            var groupByParty = getData.GroupBy(it => it.IdParty).ToList();
-            foreach (var item in groupByParty)
+            var totalScore = getDataT42.Sum(it => it.Score);
+            var groupByParty2 = getDataT42.GroupBy(it => it.IdParty).ToList();
+            foreach (var item in groupByParty2)
             {
                 var percentScoreParty = item.Sum(it => it.Score) * 100.0 / totalScore;
                 var haveScore = Math.Round(percentScoreParty / 100.0 * 500);
@@ -347,6 +369,36 @@ namespace Election.Api.Controllers
             FinalPartyScoreCollection.DeleteMany(it => true);
             var sortData = listParty.OrderByDescending(it => it.PercentScore).ToList();
             FinalPartyScoreCollection.InsertMany(sortData);
+        }
+
+        [HttpGet]
+        public void UpdatePartyScore()
+        {
+            // var getDataT42 = Table4Collection.Find(it => true).ToList();
+            // var listParty = new List<PartyList>();
+            // var totalScore = getDataT42.Sum(it => it.Score);
+            // var groupByParty = getDataT42.GroupBy(it => it.IdParty).ToList();
+            // foreach (var item in groupByParty)
+            // {
+            //     var percentScoreParty = item.Sum(it => it.Score) * 100.0 / totalScore;
+            //     var haveScore = Math.Round(percentScoreParty / 100.0 * 500);
+            //     var areaScore = item.Count(it => it.Tags.Any(i => i == "ชนะ"));
+            //     var scorePartyList = (haveScore - areaScore >= 0) ? haveScore - areaScore : 0;
+            //     var getOneData = item.FirstOrDefault();
+            //     listParty.Add(new PartyList
+            //     {
+            //         Id = Guid.NewGuid().ToString(),
+            //         IdParty = getOneData.IdParty,
+            //         PartyName = getOneData.NameParty,
+            //         TotalScore = haveScore,
+            //         AreaScore = areaScore,
+            //         NameListScore = scorePartyList,
+            //         PercentScore = percentScoreParty
+            //     });
+            // }
+            // FinalPartyScoreCollection.DeleteMany(it => true);
+            // var sortData = listParty.OrderByDescending(it => it.PercentScore).ToList();
+            // FinalPartyScoreCollection.InsertMany(sortData);
         }
 
         // [HttpPost]
