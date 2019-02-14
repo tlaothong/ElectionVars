@@ -371,7 +371,7 @@ namespace Election.Api.Controllers
             FinalPartyScoreCollection.InsertMany(sortData);
         }
 
-        [HttpGet]
+        [HttpPost]
         public void UpdatePartyScore()
         {
             var getDataT42 = Table4Collection.Find(it => true).ToList();
