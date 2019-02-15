@@ -365,6 +365,29 @@ namespace Election.Api.Controllers
             return getDataTable2;
         }
 
+        [HttpGet]
+        public List<ScoreArea> GetAllAreaTable2()
+        {
+            var getDataTable2 = Table2Collection.Find(it => true).ToList()
+            .OrderBy(it => it.IdArea).ToList()
+            .GroupBy(it => it.IdArea).ToList();
+            var listArea = new List<ScoreArea>();
+            foreach (var data in getDataTable2)
+            {
+                var getData = data.FirstOrDefault();
+                listArea.Add(getData);
+            }
+            return listArea;
+        }
+
+        [HttpGet("{idArea}")]
+        public List<ScoreArea> GetAreaTable2(string idArea)
+        {
+            var getArea = Table2Collection.Find(it => it.IdArea == idArea).ToList()
+            .OrderByDescending(it => it.Score).ToList();
+            return getArea;
+        }
+
         [HttpPost]
         public void UpdateScorePartyApp1()
         {
