@@ -18,12 +18,14 @@ namespace Election.Api.Controllers
         IMongoCollection<ScorePollCsv> ScorePollCsvCollection { get; set; }
         IMongoCollection<ScorePoll> ScorePollV2Collection { get; set; }
         IMongoCollection<ScoreArea> Table4Collection { get; set; }
+        IMongoCollection<ScoreArea> Table2Collection { get; set; }
         IMongoCollection<PartyList> PartyScoreCollection { get; set; }
         IMongoCollection<ScorePollV2> ScorePollV3Collection { get; set; }
         // test
         IMongoCollection<ScorePollV2> FinalScorePollCollection { get; set; }
         IMongoCollection<ScoreArea> TestTable4Collection { get; set; }
         IMongoCollection<PartyList> FinalPartyScoreCollection { get; set; }
+        IMongoCollection<PartyList> App1PartyScoreCollection { get; set; }
 
         public ElectionV3Controller()
         {
@@ -37,12 +39,14 @@ namespace Election.Api.Controllers
             // ScorePollCsvCollection = database.GetCollection<ScorePollCsv>("ScorePollCsv");
             // ScorePollV2Collection = database.GetCollection<ScorePoll>("ScorePollV2");
             Table4Collection = database.GetCollection<ScoreArea>("Table4");
+            Table2Collection = database.GetCollection<ScoreArea>("Table2");
             // PartyScoreCollection = database.GetCollection<PartyList>("PartyScore");
             // ScorePollV3Collection = database.GetCollection<ScorePollV2>("ScorePollV3");
             // Test
             FinalScorePollCollection = database.GetCollection<ScorePollV2>("FinalScorePoll");
             // TestTable4Collection = database.GetCollection<ScoreArea>("FinalTable4");
             FinalPartyScoreCollection = database.GetCollection<PartyList>("FinalPartyScore");
+            App1PartyScoreCollection = database.GetCollection<PartyList>("App1PartyScore");
         }
 
         [HttpGet]
@@ -344,6 +348,36 @@ namespace Election.Api.Controllers
             FinalPartyScoreCollection.DeleteMany(it => true);
             var sortData = listParty.OrderByDescending(it => it.PercentScore).ToList();
             FinalPartyScoreCollection.InsertMany(sortData);
+        }
+
+        [HttpPost]
+        public void UpdateTable2()
+        {
+            var getDataTable4 = Table4Collection.Find(it => true).ToList();
+            Table2Collection.DeleteMany(it => true);
+            Table2Collection.InsertMany(getDataTable4);
+        }
+
+        [HttpGet]
+        public List<ScoreArea> GetTable2()
+        {
+            var getDataTable2 = Table2Collection.Find(it => true).ToList().OrderBy(it => it.IdArea).ToList();
+            return getDataTable2;
+        }
+
+        [HttpPost]
+        public void UpdateScorePartyApp1()
+        {
+            var getDataScorePartyFormApp2 = FinalPartyScoreCollection.Find(it => true).ToList();
+            App1PartyScoreCollection.DeleteMany(it => true);
+            App1PartyScoreCollection.InsertMany(getDataScorePartyFormApp2);
+        }
+
+        [HttpGet]
+        public List<PartyList> GetApp1AllScoreParty()
+        {
+            var getDataApp1ScoreParty = App1PartyScoreCollection.Find(it => true).ToList().OrderByDescending(it => it.PercentScore).ToList();
+            return getDataApp1ScoreParty;
         }
     }
 }
