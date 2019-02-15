@@ -383,7 +383,7 @@ namespace Election.Api.Controllers
         [HttpGet("{idArea}")]
         public List<ScoreArea> GetAreaTable2(string idArea)
         {
-            var getArea = Table2Collection.Find(it => it.IdArea == idArea).ToList()
+            var getArea = Table2Collection.Find(it => it.IdArea == idArea.ToUpper()).ToList()
             .OrderByDescending(it => it.Score).ToList();
             return getArea;
         }
