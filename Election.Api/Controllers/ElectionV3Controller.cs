@@ -15,15 +15,9 @@ namespace Election.Api.Controllers
     [Route("api/[controller]/[action]")]
     public class ElectionV3Controller : Controller
     {
-        IMongoCollection<ScorePollCsv> ScorePollCsvCollection { get; set; }
-        IMongoCollection<ScorePoll> ScorePollV2Collection { get; set; }
         IMongoCollection<ScoreArea> Table4Collection { get; set; }
         IMongoCollection<ScoreArea> Table2Collection { get; set; }
-        IMongoCollection<PartyList> PartyScoreCollection { get; set; }
-        IMongoCollection<ScorePollV2> ScorePollV3Collection { get; set; }
-        // test
         IMongoCollection<ScorePollV2> FinalScorePollCollection { get; set; }
-        IMongoCollection<ScoreArea> TestTable4Collection { get; set; }
         IMongoCollection<PartyList> FinalPartyScoreCollection { get; set; }
         IMongoCollection<PartyList> App1PartyScoreCollection { get; set; }
 
@@ -36,19 +30,13 @@ namespace Election.Api.Controllers
             };
             var mongoClient = new MongoClient(settings);
             var database = mongoClient.GetDatabase("electionmana");
-            // ScorePollCsvCollection = database.GetCollection<ScorePollCsv>("ScorePollCsv");
-            // ScorePollV2Collection = database.GetCollection<ScorePoll>("ScorePollV2");
             Table4Collection = database.GetCollection<ScoreArea>("Table4");
             Table2Collection = database.GetCollection<ScoreArea>("Table2");
-            // PartyScoreCollection = database.GetCollection<PartyList>("PartyScore");
-            // ScorePollV3Collection = database.GetCollection<ScorePollV2>("ScorePollV3");
-            // Test
             FinalScorePollCollection = database.GetCollection<ScorePollV2>("FinalScorePoll");
-            // TestTable4Collection = database.GetCollection<ScoreArea>("FinalTable4");
             FinalPartyScoreCollection = database.GetCollection<PartyList>("FinalPartyScore");
             App1PartyScoreCollection = database.GetCollection<PartyList>("App1PartyScore");
         }
-
+        // Api Score Poll =========================================================================
         [HttpGet]
         public List<ScorePollV2> GetAllScorePoll()
         {
@@ -68,7 +56,7 @@ namespace Election.Api.Controllers
             }
             return listCurrentScorePollOfArea;
         }
-
+        // Api Table4 ==============================================================================================================
         [HttpGet]
         public List<ScoreArea> GetAllScoreTable4()
         {
@@ -76,6 +64,53 @@ namespace Election.Api.Controllers
             return getData;
         }
 
+        [HttpGet("{idArea}")]
+        public List<ScoreArea> GetAreaWithIdArea(string idArea)
+        {
+            var getData = Table4Collection.Find(it => it.IdArea == idArea.ToUpper()).ToList();
+            return getData;
+        }
+
+        [HttpPost("{idArea}/{newTag}")]
+        public void SetTags(string idArea, string newTag)
+        {
+            var getDataTable4 = Table4Collection.Find(it => it.IdParty == "034" && it.IdArea == idArea.ToUpper()).FirstOrDefault();
+            if (getDataTable4.Tags.Any(i => i != newTag))
+            {
+                getDataTable4.Tags.Add(newTag);
+            }
+            Table4Collection.ReplaceOne(it => it.Id == getDataTable4.Id, getDataTable4);
+        }
+
+        [HttpGet("{getTag}")]
+        public List<ScoreArea> GetAreaWithTag(string getTag)
+        {
+            var getData = Table4Collection.Find(it => it.Tags.Any(i => i == getTag)).ToList();
+            return getData;
+        }
+
+        [HttpGet]
+        public List<string> GetAllTag()
+        {
+            var getDataTag = Table4Collection.Find(it => it.IdParty == "034").ToList();
+            var listTag = new List<string>();
+            foreach (var data in getDataTag)
+            {
+                foreach (var tags in data.Tags)
+                {
+                    listTag.Add(tags);
+                }
+            }
+
+            var getAllDuplicateTag = listTag.GroupBy(it => it).ToList();
+            var listTagWithOutDuplicate = new List<string>();
+            foreach (var data in getAllDuplicateTag)
+            {
+                listTagWithOutDuplicate.Add(data.Key);
+            }
+
+            return listTagWithOutDuplicate;
+        }
 
         [HttpPost("{newScore}")]
         public void EditScore([FromBody]ScoreArea scorePartyModel, double newScore)
@@ -191,13 +226,13 @@ namespace Election.Api.Controllers
             var getData = Table4Collection.Find(it => it.IdArea == idArea.ToUpper()).ToList().OrderByDescending(it => it.Score).ToList();
             return getData;
         }
-
+        // Api Score Party =========================================================================
         [HttpGet]
         public List<PartyList> GetAllPartyScore()
         {
             return FinalPartyScoreCollection.Find(it => true).ToList().OrderByDescending(it => it.PercentScore).ToList();
         }
-
+        //===================================================== Api Upload File and UpdateData ==========================================
         [HttpPost]
         public void UploadFile()
         {
@@ -349,15 +384,7 @@ namespace Election.Api.Controllers
             var sortData = listParty.OrderByDescending(it => it.PercentScore).ToList();
             FinalPartyScoreCollection.InsertMany(sortData);
         }
-
-        [HttpPost]
-        public void UpdateTable2()
-        {
-            var getDataTable4 = Table4Collection.Find(it => true).ToList();
-            Table2Collection.DeleteMany(it => true);
-            Table2Collection.InsertMany(getDataTable4);
-        }
-
+        // Api App1 Table 2 ========================================================================================
         [HttpGet]
         public List<ScoreArea> GetTable2()
         {
@@ -387,6 +414,13 @@ namespace Election.Api.Controllers
             .OrderByDescending(it => it.Score).ToList();
             return getArea;
         }
+        // Api App1 Score Party ====================================================================================
+        [HttpGet]
+        public List<PartyList> GetApp1AllScoreParty()
+        {
+            var getDataApp1ScoreParty = App1PartyScoreCollection.Find(it => true).ToList().OrderByDescending(it => it.PercentScore).ToList();
+            return getDataApp1ScoreParty;
+        }
 
         [HttpPost]
         public void UpdateScorePartyApp1()
@@ -394,13 +428,6 @@ namespace Election.Api.Controllers
             var getDataScorePartyFormApp2 = FinalPartyScoreCollection.Find(it => true).ToList();
             App1PartyScoreCollection.DeleteMany(it => true);
             App1PartyScoreCollection.InsertMany(getDataScorePartyFormApp2);
-        }
-
-        [HttpGet]
-        public List<PartyList> GetApp1AllScoreParty()
-        {
-            var getDataApp1ScoreParty = App1PartyScoreCollection.Find(it => true).ToList().OrderByDescending(it => it.PercentScore).ToList();
-            return getDataApp1ScoreParty;
         }
     }
 }
