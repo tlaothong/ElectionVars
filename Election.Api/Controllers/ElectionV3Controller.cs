@@ -85,7 +85,7 @@ namespace Election.Api.Controllers
         [HttpGet("{getTag}")]
         public List<ScoreArea> GetAreaWithTag(string getTag)
         {
-            var getData = Table4Collection.Find(it => it.Tags.Any(i => i == getTag)).ToList();
+            var getData = Table4Collection.Find(it => it.IdParty == "034" && it.Tags.Any(i => i == getTag)).ToList();
             return getData;
         }
 
