@@ -415,6 +415,13 @@ namespace Election.Api.Controllers
             .OrderByDescending(it => it.Score).ToList();
             return getArea;
         }
+        [HttpPost]
+        public void UpdateTable2()
+        {
+            var getData = Table4Collection.Find(it => true).ToList();
+            Table2Collection.DeleteMany(it => true);
+            Table2Collection.InsertMany(getData);
+        }
         // Api App1 Score Party ====================================================================================
         [HttpGet]
         public List<PartyList> GetApp1AllScoreParty()
