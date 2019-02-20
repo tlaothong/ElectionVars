@@ -10,8 +10,10 @@ namespace Election.Api.Models
         public string IdParty { get; set; }
         public string PartyName { get; set; }
         public double TotalScore { get; set; }
-        public double AreaScore { get; set; }
-        public double NameListScore { get; set; }
+        public int HaveScore { get; set; }
+        public double HaveScoreDigit { get; set; }
+        public int AreaScore { get; set; }
+        public int NameListScore { get; set; }
         public double PercentScore { get; set; }
     }
 }
