@@ -358,33 +358,77 @@ namespace Election.Api.Controllers
         [HttpPost]
         public void UpdatePartyScore()
         {
-            var getDataT42 = Table4Collection.Find(it => true).ToList();
-            var listParty = new List<PartyList>();
-            var totalScore = getDataT42.Sum(it => it.Score);
-            var groupByParty = getDataT42.GroupBy(it => it.IdParty).ToList();
-            foreach (var item in groupByParty)
+            var dataScoreArea = Table4Collection.Find(it => true).ToList();
+
+            var totalScore = dataScoreArea.Sum(it => it.Score);
+            var totalSS = 500;
+            var ratio = Convert.ToInt32(totalScore / totalSS);
+
+            var listPartyFinal = new List<PartyList>();
+            var listParty = dataScoreArea.GroupBy(it => it.IdParty)
+            .Select(it => new PartyList
             {
-                var percentScoreParty = item.Sum(it => it.Score) * 100.0 / totalScore;
-                var haveScore = Math.Round(percentScoreParty / 100.0 * 500);
-                var areaScore = item.Count(it => it.Tags.Any(i => i == "ชนะ"));
-                // * Edit
-                var scorePartyList = (haveScore - areaScore >= 0) ? haveScore - areaScore : 0;
-                var getOneData = item.FirstOrDefault();
-                listParty.Add(new PartyList
+                Id = Guid.NewGuid().ToString(),
+                IdParty = it.Key,
+                PartyName = it.FirstOrDefault().NameParty,
+                TotalScore = it.Sum(i => i.Score),
+                HaveScoreDigit = it.Sum(i => i.Score) / ratio,
+                HaveScore = Convert.ToInt32(it.Sum(i => i.Score) / ratio),
+                AreaScore = it.Count(i => i.Tags.Any(x => x == "ชนะ")),
+                NameListScore = Convert.ToInt32(it.Sum(i => i.Score) / ratio) - it.Count(i => i.Tags.Any(x => x == "ชนะ")),
+                PercentScore = it.Sum(i => i.Score) / totalScore * 100
+            }).ToList();
+
+            while (listParty.Sum(it => it.HaveScore) < totalSS || listParty.Any(it => it.HaveScore < it.AreaScore))
+            {
+                if (listParty.Sum(it => it.HaveScore) < totalSS)
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    IdParty = getOneData.IdParty,
-                    PartyName = getOneData.NameParty,
-                    TotalScore = haveScore,
-                    AreaScore = areaScore,
-                    NameListScore = scorePartyList,
-                    PercentScore = percentScoreParty
-                });
+                    var diff = totalSS - listParty.Sum(it => it.HaveScore);
+                    listParty = listParty.OrderByDescending(it => it.HaveScoreDigit - Math.Floor(it.HaveScoreDigit)).ToList();
+                    for (int i = 0; i < diff; i++)
+                    {
+                        listParty[i].HaveScore++;
+                        listParty[i].NameListScore++;
+                        listParty[i].PercentScore = listParty[i].HaveScore * 100.0 / 500;
+                    }
+                }
+
+                if (listParty.Any(it => it.HaveScore < it.AreaScore))
+                {
+                    var parties = listParty.Where(it => it.HaveScore < it.AreaScore).ToList();
+
+                    foreach (var party in parties)
+                    {
+                        listParty.Remove(party);
+                        party.HaveScoreDigit = party.AreaScore;
+                        party.HaveScore = party.AreaScore;
+                        party.NameListScore = 0;
+                        party.PercentScore = party.HaveScore * 100.0 / 500;
+                    }
+
+                    listPartyFinal.AddRange(parties);
+
+                    totalScore = listParty.Sum(it => it.TotalScore);
+                    totalSS = 500 - listPartyFinal.Sum(it => it.HaveScore);
+                    ratio = Convert.ToInt32(totalScore / totalSS);
+
+                    foreach (var party in listParty)
+                    {
+                        party.HaveScoreDigit = party.TotalScore / ratio;
+                        party.HaveScore = Convert.ToInt32(party.HaveScoreDigit);
+                        party.NameListScore = party.HaveScore - party.AreaScore;
+                        party.PercentScore = party.HaveScore * 100.0 / 500;
+                    }
+                }
             }
+
+            listPartyFinal.AddRange(listParty);
+
             FinalPartyScoreCollection.DeleteMany(it => true);
-            var sortData = listParty.OrderByDescending(it => it.PercentScore).ToList();
+            var sortData = listPartyFinal.OrderByDescending(it => it.PercentScore).ToList();
             FinalPartyScoreCollection.InsertMany(sortData);
         }
+        
         // Api App1 Table 2 ========================================================================================
         [HttpGet]
         public List<ScoreArea> GetTable2()
