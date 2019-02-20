@@ -359,7 +359,6 @@ namespace Election.Api.Controllers
         public void UpdatePartyScore()
         {
             var dataScoreArea = Table4Collection.Find(it => true).ToList();
-
             var totalScore = dataScoreArea.Sum(it => it.Score);
             var totalSS = 500;
             var ratio = Convert.ToInt32(totalScore / totalSS);
@@ -428,7 +427,7 @@ namespace Election.Api.Controllers
             var sortData = listPartyFinal.OrderByDescending(it => it.PercentScore).ToList();
             FinalPartyScoreCollection.InsertMany(sortData);
         }
-        
+
         // Api App1 Table 2 ========================================================================================
         [HttpGet]
         public List<ScoreArea> GetTable2()
