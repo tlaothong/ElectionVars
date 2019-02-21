@@ -72,11 +72,11 @@ namespace Election.Api.Controllers
             return getData;
         }
 
-        [HttpPost("{idArea}/{newTag}")]
-        public void SetTags(string idArea, string newTag)
+        [HttpPost("{idArea}")]
+        public void SetTags([FromBody]TextTag newTag, string idArea)
         {
             var getDataTable4 = Table4Collection.Find(it => it.IdParty == "034" && it.IdArea == idArea.ToUpper()).FirstOrDefault();
-            var listTags = newTag.Split('#').Distinct().ToList();
+            var listTags = newTag.Text.Split('#').Distinct().ToList();
             getDataTable4.Tags.Clear();
             getDataTable4.Tags.AddRange(listTags);
             Table4Collection.ReplaceOne(it => it.Id == getDataTable4.Id, getDataTable4);
