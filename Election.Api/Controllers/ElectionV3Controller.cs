@@ -75,11 +75,21 @@ namespace Election.Api.Controllers
         public void SetTags(string idArea, string newTag)
         {
             var getDataTable4 = Table4Collection.Find(it => it.IdParty == "034" && it.IdArea == idArea.ToUpper()).FirstOrDefault();
-            if (getDataTable4.Tags.Any(i => i != newTag))
+            var listTags = newTag.Split('#').ToList();
+            getDataTable4.Tags.Clear();
+            foreach (var tags in listTags)
             {
-                getDataTable4.Tags.Add(newTag);
+                getDataTable4.Tags.Add(tags);
             }
             Table4Collection.ReplaceOne(it => it.Id == getDataTable4.Id, getDataTable4);
+        }
+
+        [HttpGet("{idArea}")]
+        public string GetTagArea(string idArea)
+        {
+            var tagDataTable4 = Table4Collection.Find(it => it.IdArea == idArea && it.IdParty == "034")
+            .FirstOrDefault().Tags.ToString();
+            return tagDataTable4;
         }
 
         [HttpGet("{getTag}")]
@@ -293,6 +303,21 @@ namespace Election.Api.Controllers
                             Source = "Poll"
                         });
                     }
+                    else
+                    {
+                        listScorePoll.Add(new ScorePollV2
+                        {
+                            Id = datas.Id,
+                            IdParty = datas.IdParty,
+                            NameParty = datas.NameParty,
+                            IdArea = datas.IdArea,
+                            NameArea = datas.NameArea,
+                            datePoll = DateTime.Now,
+                            Score = datas.Score,
+                            PercentScore = datas.Score,
+                            Source = "Poll"
+                        });
+                    }
                 }
             }
             FinalScorePollCollection.InsertMany(listScorePoll);
@@ -372,6 +397,7 @@ namespace Election.Api.Controllers
                 Id = Guid.NewGuid().ToString(),
                 IdParty = it.Key,
                 PartyName = it.FirstOrDefault().NameParty,
+                NameInitial = it.FirstOrDefault().NameInitial,
                 TotalScore = it.Sum(i => i.Score),
                 HaveScoreDigit = it.Sum(i => i.Score) / ratio,
                 HaveScore = Math.Round(it.Sum(i => i.Score) / ratio),
