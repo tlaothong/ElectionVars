@@ -360,7 +360,7 @@ namespace Election.Api.Controllers
         {
             var dataScoreArea = Table4Collection.Find(it => true).ToList();
             var totalScore = dataScoreArea.Sum(it => it.Score);
-            var totalSS = 500;
+            var totalSS = 500.0;
             var ratio = Convert.ToInt32(totalScore / totalSS);
 
             var listPartyFinal = new List<PartyList>();
@@ -372,10 +372,10 @@ namespace Election.Api.Controllers
                 PartyName = it.FirstOrDefault().NameParty,
                 TotalScore = it.Sum(i => i.Score),
                 HaveScoreDigit = it.Sum(i => i.Score) / ratio,
-                HaveScore = Convert.ToInt32(it.Sum(i => i.Score) / ratio),
+                HaveScore = Math.Round(it.Sum(i => i.Score) / ratio),
                 AreaScore = it.Count(i => i.Tags.Any(x => x == "ชนะ")),
-                NameListScore = Convert.ToInt32(it.Sum(i => i.Score) / ratio) - it.Count(i => i.Tags.Any(x => x == "ชนะ")),
-                PercentScore = it.Sum(i => i.Score) / totalScore * 100
+                NameListScore = Math.Round(it.Sum(i => i.Score) / ratio) - it.Count(i => i.Tags.Any(x => x == "ชนะ")),
+                PercentScore = Math.Round(it.Sum(i => i.Score) / ratio) * 100 / totalSS
             }).ToList();
 
             while (listParty.Sum(it => it.HaveScore) < totalSS || listParty.Any(it => it.HaveScore < it.AreaScore))
@@ -414,7 +414,7 @@ namespace Election.Api.Controllers
                     foreach (var party in listParty)
                     {
                         party.HaveScoreDigit = party.TotalScore / ratio;
-                        party.HaveScore = Convert.ToInt32(party.HaveScoreDigit);
+                        party.HaveScore = Math.Round(party.HaveScoreDigit);
                         party.NameListScore = party.HaveScore - party.AreaScore;
                         party.PercentScore = party.HaveScore * 100.0 / 500;
                     }
