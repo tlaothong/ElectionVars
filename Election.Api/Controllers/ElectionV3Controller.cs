@@ -75,11 +75,11 @@ namespace Election.Api.Controllers
         public void SetTags(string idArea, string newTag)
         {
             var getDataTable4 = Table4Collection.Find(it => it.IdParty == "034" && it.IdArea == idArea.ToUpper()).FirstOrDefault();
-            var listTags = newTag.Split('#').ToList();
+            var listTags = newTag.Split('#').ToList().GroupBy(it => it).ToList();
             getDataTable4.Tags.Clear();
             foreach (var tags in listTags)
             {
-                getDataTable4.Tags.Add(tags);
+                getDataTable4.Tags.Add(tags.Key);
             }
             Table4Collection.ReplaceOne(it => it.Id == getDataTable4.Id, getDataTable4);
         }
@@ -87,9 +87,9 @@ namespace Election.Api.Controllers
         [HttpGet("{idArea}")]
         public string GetTagArea(string idArea)
         {
-            var tagDataTable4 = Table4Collection.Find(it => it.IdArea == idArea && it.IdParty == "034")
-            .FirstOrDefault().Tags.ToString();
-            return tagDataTable4;
+            var tagDataTable4 = Table4Collection.Find(it => it.IdArea == idArea.ToUpper() && it.IdParty == "034").FirstOrDefault();
+            var tags = string.Join("#", tagDataTable4.Tags);
+            return tags;
         }
 
         [HttpGet("{getTag}")]
