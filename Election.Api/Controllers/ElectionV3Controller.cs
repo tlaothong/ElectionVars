@@ -99,10 +99,12 @@ namespace Election.Api.Controllers
             {
                 foreach (var tags in data.Tags)
                 {
-                    listTag.Add(tags);
+                    if (tags != "ชนะ" && tags != "แพ้")
+                    {
+                        listTag.Add(tags);
+                    }
                 }
             }
-
             var getAllDuplicateTag = listTag.GroupBy(it => it).ToList();
             var listTagWithOutDuplicate = new List<string>();
             foreach (var data in getAllDuplicateTag)
