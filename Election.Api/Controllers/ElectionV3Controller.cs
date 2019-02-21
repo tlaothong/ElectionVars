@@ -87,6 +87,7 @@ namespace Election.Api.Controllers
         {
             var tagDataTable4 = Table4Collection.Find(it => it.IdArea == idArea.ToUpper() && it.IdParty == "034").FirstOrDefault();
             var tags = new TextTag();
+            tagDataTable4.Tags.RemoveAll(it => it == "ชนะ" || it == "แพ้");
             tags.Text = string.Join("#", tagDataTable4.Tags);
             return tags;
         }
@@ -108,7 +109,7 @@ namespace Election.Api.Controllers
             {
                 foreach (var tags in data.Tags)
                 {
-                    if (tags != "ชนะ" && tags != "แพ้")
+                    if (tags != "ชนะ" && tags != "แพ้" && tags != "")
                     {
                         listTag.Add(tags);
                     }
@@ -324,18 +325,21 @@ namespace Election.Api.Controllers
             var getDataFromScorePoll = FinalScorePollCollection.Find(it => true).ToList();
             var getTable4 = Table4Collection.Find(it => true).ToList();
             var listTable4 = new List<ScoreArea>();
-            var groupByAreaTable4 = getDataFromScorePoll.GroupBy(it => it.IdArea).ToList();
-            foreach (var item in groupByAreaTable4)
+            var groupByAreaScorePoll = getDataFromScorePoll.GroupBy(it => it.IdArea).ToList();
+            foreach (var item in groupByAreaScorePoll)
             {
                 var groupByParty = item.GroupBy(it => it.IdParty).ToList();
                 foreach (var datas in groupByParty)
                 {
-                    var getCurrentData = datas.OrderByDescending(it => it.datePoll).FirstOrDefault();
-                    var getTable4Update = getTable4.FirstOrDefault(it => it.IdArea == getCurrentData.IdArea && it.IdParty == getCurrentData.IdParty);
-                    getTable4Update.Score = getCurrentData.Score;
-                    getTable4Update.StatusEdit = false;
-                    getTable4Update.StatusAreaEdit = false;
-                    listTable4.Add(getTable4Update);
+                    if (datas.Key != "999")
+                    {
+                        var getCurrentData = datas.OrderByDescending(it => it.datePoll).FirstOrDefault();
+                        var getTable4Update = getTable4.FirstOrDefault(it => it.IdArea == getCurrentData.IdArea && it.IdParty == getCurrentData.IdParty);
+                        getTable4Update.Score = getCurrentData.Score;
+                        getTable4Update.StatusEdit = false;
+                        getTable4Update.StatusAreaEdit = false;
+                        listTable4.Add(getTable4Update);
+                    }
                 }
             }
             Table4Collection.DeleteMany(it => true);
