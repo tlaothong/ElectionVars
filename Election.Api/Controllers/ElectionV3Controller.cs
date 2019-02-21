@@ -77,7 +77,7 @@ namespace Election.Api.Controllers
         {
             var getDataTable4 = Table4Collection.Find(it => it.IdParty == "034" && it.IdArea == idArea.ToUpper()).FirstOrDefault();
             var listTags = newTag.Text.Split('#').Distinct().ToList();
-            getDataTable4.Tags.Clear();
+            getDataTable4.Tags.RemoveAll(it => it != "ชนะ" || it != "แพ้");
             getDataTable4.Tags.AddRange(listTags);
             Table4Collection.ReplaceOne(it => it.Id == getDataTable4.Id, getDataTable4);
         }
