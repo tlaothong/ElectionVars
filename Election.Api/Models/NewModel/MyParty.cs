@@ -3,7 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Election.Api.Models
 {
-    public class MyParty
+    public class test
     {
         [BsonId]
         public string Id { get; set; }

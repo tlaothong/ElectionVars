@@ -8,6 +8,7 @@ using Election.Api.Models;
 using MongoDB.Driver;
 using System.Security.Authentication;
 using System.IO;
+using System.Text;
 
 namespace Election.Api.Controllers
 {
@@ -75,20 +76,18 @@ namespace Election.Api.Controllers
         public void SetTags(string idArea, string newTag)
         {
             var getDataTable4 = Table4Collection.Find(it => it.IdParty == "034" && it.IdArea == idArea.ToUpper()).FirstOrDefault();
-            var listTags = newTag.Split('#').ToList().GroupBy(it => it).ToList();
+            var listTags = newTag.Split('#').Distinct().ToList();
             getDataTable4.Tags.Clear();
-            foreach (var tags in listTags)
-            {
-                getDataTable4.Tags.Add(tags.Key);
-            }
+            getDataTable4.Tags.AddRange(listTags);
             Table4Collection.ReplaceOne(it => it.Id == getDataTable4.Id, getDataTable4);
         }
 
         [HttpGet("{idArea}")]
-        public string GetTagArea(string idArea)
+        public TextTag GetTagArea(string idArea)
         {
             var tagDataTable4 = Table4Collection.Find(it => it.IdArea == idArea.ToUpper() && it.IdParty == "034").FirstOrDefault();
-            var tags = string.Join("#", tagDataTable4.Tags);
+            var tags = new TextTag();
+            tags.Text = string.Join("#", tagDataTable4.Tags);
             return tags;
         }
 
@@ -210,15 +209,15 @@ namespace Election.Api.Controllers
         }
 
         [HttpGet]
-        public List<MyParty> GetMaxScoreAndMyScore()
+        public List<test> GetMaxScoreAndMyScore()
         {
             var getData = Table4Collection.Find(it => true).ToList().GroupBy(it => it.IdArea);
-            var listScore = new List<MyParty>();
+            var listScore = new List<test>();
             foreach (var item in getData)
             {
                 var getWinnerArea = item.FirstOrDefault(it => it.Score == item.Max(i => i.Score));
                 var getMyParty = item.FirstOrDefault(it => it.IdParty == "034");
-                listScore.Add(new MyParty
+                listScore.Add(new test
                 {
                     Id = Guid.NewGuid().ToString(),
                     IdArea = item.Key,
