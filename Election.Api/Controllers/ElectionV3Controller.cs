@@ -17,6 +17,7 @@ namespace Election.Api.Controllers
     public class ElectionV3Controller : Controller
     {
         IMongoCollection<ScoreArea> Table4Collection { get; set; }
+        IMongoCollection<ScoreArea> FinalTable4Collection { get; set; }
         IMongoCollection<ScoreArea> Table2Collection { get; set; }
         IMongoCollection<ScorePollV2> FinalScorePollCollection { get; set; }
         IMongoCollection<PartyList> FinalPartyScoreCollection { get; set; }
@@ -32,6 +33,7 @@ namespace Election.Api.Controllers
             var mongoClient = new MongoClient(settings);
             var database = mongoClient.GetDatabase("electionmana");
             Table4Collection = database.GetCollection<ScoreArea>("Table4");
+            FinalTable4Collection = database.GetCollection<ScoreArea>("FinalTable4");
             Table2Collection = database.GetCollection<ScoreArea>("Table2");
             FinalScorePollCollection = database.GetCollection<ScorePollV2>("FinalScorePoll");
             FinalPartyScoreCollection = database.GetCollection<PartyList>("FinalPartyScore");
@@ -336,6 +338,7 @@ namespace Election.Api.Controllers
                         var getCurrentData = datas.OrderByDescending(it => it.datePoll).FirstOrDefault();
                         var getTable4Update = getTable4.FirstOrDefault(it => it.IdArea == getCurrentData.IdArea && it.IdParty == getCurrentData.IdParty);
                         getTable4Update.Score = getCurrentData.Score;
+                        getTable4Update.Source = getCurrentData.Source;
                         getTable4Update.StatusEdit = false;
                         getTable4Update.StatusAreaEdit = false;
                         listTable4.Add(getTable4Update);
@@ -543,6 +546,15 @@ namespace Election.Api.Controllers
             var getDataScorePartyFormApp2 = FinalPartyScoreCollection.Find(it => true).ToList();
             App1PartyScoreCollection.DeleteMany(it => true);
             App1PartyScoreCollection.InsertMany(getDataScorePartyFormApp2);
+        }
+        //Mock Final Table4
+        [HttpPost]
+        public void MockFinalTable4()
+        {
+            var csvReader = new ReadCsv();
+            var listDataTable4FromCsv = csvReader.MockPrototypeDataTable2().OrderBy(it => it.IdArea).ToList();
+            FinalTable4Collection.DeleteMany(it => true);
+            FinalTable4Collection.InsertMany(listDataTable4FromCsv);
         }
     }
 }

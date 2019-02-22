@@ -244,7 +244,7 @@ public class ReadCsv
 
     public List<ScoreArea> MockPrototypeDataTable2()
     {
-        var FilePath = @"DataTable2.csv";
+        var FilePath = @"FinalTable2.csv";
         var listScoreArea = new List<ScoreArea>();
         using (var reader = new StreamReader(FilePath))
         {
@@ -273,7 +273,7 @@ public class ReadCsv
                             NoRegister = getDataFromLine[4],
                             NameRegister = getDataFromLine[5],
                             Status = true,
-                            NameInitial = getDataFromLine[7],
+                            NameInitial = getDataFromLine[7]
                         });
                     }
                 }
