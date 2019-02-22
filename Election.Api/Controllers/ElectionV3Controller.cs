@@ -496,6 +496,39 @@ namespace Election.Api.Controllers
             Table2Collection.DeleteMany(it => true);
             Table2Collection.InsertMany(getData);
         }
+
+        [HttpGet("{getTag}")]
+        public List<ScoreArea> GetAreaWithTagTable2(string getTag)
+        {
+            var getData = Table2Collection.Find(it => it.IdParty == "034" && it.Tags.Any(i => i == getTag)).ToList()
+            .OrderBy(it => it.IdArea).ToList();
+            return getData;
+        }
+
+        [HttpGet]
+        public List<string> GetAllTagTable2()
+        {
+            var getDataTag = Table2Collection.Find(it => it.IdParty == "034").ToList();
+            var listTag = new List<string>();
+            foreach (var data in getDataTag)
+            {
+                foreach (var tags in data.Tags)
+                {
+                    if (tags != "ชนะ" && tags != "แพ้" && tags != "")
+                    {
+                        listTag.Add(tags);
+                    }
+                }
+            }
+            var getAllDuplicateTag = listTag.GroupBy(it => it).ToList();
+            var listTagWithOutDuplicate = new List<string>();
+            foreach (var data in getAllDuplicateTag)
+            {
+                listTagWithOutDuplicate.Add(data.Key);
+            }
+
+            return listTagWithOutDuplicate;
+        }
         // Api App1 Score Party ====================================================================================
         [HttpGet]
         public List<PartyList> GetApp1AllScoreParty()
