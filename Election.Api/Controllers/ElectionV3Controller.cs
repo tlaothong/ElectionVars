@@ -154,44 +154,44 @@ namespace Election.Api.Controllers
                 }
             }
             // set tag
-            var getDataUpdate2 = Table4Collection.Find(it => true).ToList();
-            var groupByArea2 = getDataUpdate2.GroupBy(it => it.IdArea).ToList();
-            var listUpdate = new List<ScoreArea>();
-            foreach (var item in groupByArea2)
-            {
-                var maxScore = item.Max(it => it.Score);
-                foreach (var data in item)
-                {
-                    if (data.Score == maxScore)
-                    {
-                        if (data.Tags.Any(i => i != "ชนะ"))
-                        {
-                            data.Tags.Remove("แพ้");
-                            data.Tags.Add("ชนะ");
-                            listUpdate.Add(data);
-                        }
-                        else
-                        {
-                            listUpdate.Add(data);
-                        }
-                    }
-                    else
-                    {
-                        if (data.Tags.Any(i => i == "ชนะ"))
-                        {
-                            data.Tags.Remove("ชนะ");
-                            data.Tags.Add("แพ้");
-                            listUpdate.Add(data);
-                        }
-                        else
-                        {
-                            listUpdate.Add(data);
-                        }
-                    }
-                }
-            }
-            Table4Collection.DeleteMany(it => true);
-            Table4Collection.InsertMany(listUpdate);
+            // var getDataUpdate2 = Table4Collection.Find(it => true).ToList();
+            // var groupByArea2 = getDataUpdate2.GroupBy(it => it.IdArea).ToList();
+            // var listUpdate = new List<ScoreArea>();
+            // foreach (var item in groupByArea2)
+            // {
+            //     var maxScore = item.Max(it => it.Score);
+            //     foreach (var data in item)
+            //     {
+            //         if (data.Score == maxScore)
+            //         {
+            //             if (data.Tags.Any(i => i != "ชนะ"))
+            //             {
+            //                 data.Tags.Remove("แพ้");
+            //                 data.Tags.Add("ชนะ");
+            //                 listUpdate.Add(data);
+            //             }
+            //             else
+            //             {
+            //                 listUpdate.Add(data);
+            //             }
+            //         }
+            //         else
+            //         {
+            //             if (data.Tags.Any(i => i == "ชนะ"))
+            //             {
+            //                 data.Tags.Remove("ชนะ");
+            //                 data.Tags.Add("แพ้");
+            //                 listUpdate.Add(data);
+            //             }
+            //             else
+            //             {
+            //                 listUpdate.Add(data);
+            //             }
+            //         }
+            //     }
+            // }
+            // Table4Collection.DeleteMany(it => true);
+            // Table4Collection.InsertMany(listUpdate);
         }
 
         [HttpGet]
