@@ -283,7 +283,7 @@ namespace Election.Api.Controllers
                         var getData = item.Split(',').ToList();
                         if (getData[0] != "รหัสพรรค" && getData[1] != "ชื่อเขต" &&
                         getData[2] != "รหัสเขต " && getData[3] != "ชื่อพรรค" && getData[4] != "เปอร์เซ็น/คะแนน"
-                        && getData[5] != "ภูมิภาค")
+                        && getData[5] != "ภูมิภาค" && getData[4] != "")
                         {
                             float.TryParse(getData[4], out float score);
                             listScoreCsv.Add(new ScorePollCsv
