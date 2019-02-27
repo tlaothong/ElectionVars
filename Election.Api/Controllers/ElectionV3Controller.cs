@@ -86,7 +86,9 @@ namespace Election.Api.Controllers
             // getDataTable4.Tags.RemoveAll(it => it != "ชนะ" || it != "แพ้");
             getDataTable4.Tags.RemoveAll(it => true);
             getDataTable4.Tags.AddRange(listTags);
-            Table4Collection.ReplaceOne(it => it.Id == getDataTable4.Id, getDataTable4);
+            Table4Collection.DeleteOne(it => it.Id == getDataTable4.Id);
+            Table4Collection.InsertOne(getDataTable4);
+            // Table4Collection.ReplaceOne(it => it.Id == getDataTable4.Id, getDataTable4);
         }
 
         [HttpGet("{idArea}")]
@@ -139,7 +141,9 @@ namespace Election.Api.Controllers
             scorePartyModel.Score = newScore;
             getParty.Score = scorePartyModel.Score;
             getParty.StatusEdit = true;
-            Table4Collection.ReplaceOne(it => it.Id == getParty.Id, getParty);
+            Table4Collection.DeleteOne(it => it.Id == getParty.Id);
+            Table4Collection.InsertOne(getParty);
+            // Table4Collection.ReplaceOne(it => it.Id == getParty.Id, getParty);
             //set status Area Edit
             var getDataUpdate = Table4Collection.Find(it => true).ToList();
             var groupByArea = getDataUpdate.GroupBy(it => it.IdArea).ToList();
@@ -150,7 +154,9 @@ namespace Election.Api.Controllers
                     foreach (var datas in item)
                     {
                         datas.StatusAreaEdit = true;
-                        Table4Collection.ReplaceOne(it => it.Id == datas.Id, datas);
+                        Table4Collection.DeleteOne(it => it.Id == datas.Id);
+                        Table4Collection.InsertOne(datas);
+                        // Table4Collection.ReplaceOne(it => it.Id == datas.Id, datas);
                     }
                 }
             }
@@ -246,7 +252,7 @@ namespace Election.Api.Controllers
                 Table4Collection.InsertMany(list);
                 await Task.Delay(Delay);
             }
-           
+
         }
         [HttpPost]
         public async Task UploadFile()
@@ -472,7 +478,9 @@ namespace Election.Api.Controllers
         {
             var dataPartyScore = FinalPartyScoreCollection.Find(it => it.Id == id).FirstOrDefault();
             dataPartyScore.StatusAllies = statusAllies;
-            FinalPartyScoreCollection.ReplaceOne(it => it.Id == id, dataPartyScore);
+            FinalPartyScoreCollection.DeleteOne(it => it.Id == id);
+            FinalPartyScoreCollection.InsertOne(dataPartyScore);
+            // FinalPartyScoreCollection.ReplaceOne(it => it.Id == id, dataPartyScore);
         }
 
         // Api App1 Table 2 ========================================================================================
