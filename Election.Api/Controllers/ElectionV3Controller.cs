@@ -16,8 +16,6 @@ namespace Election.Api.Controllers
     [Route("api/[controller]/[action]")]
     public class ElectionV3Controller : Controller
     {
-        private readonly IMongoDatabase database;
-
         IMongoCollection<ScoreArea> Table4Collection { get; set; }
         IMongoCollection<ScoreArea> FinalTable4Collection { get; set; }
         IMongoCollection<ScoreArea> Table2Collection { get; set; }
@@ -28,7 +26,6 @@ namespace Election.Api.Controllers
         public ElectionV3Controller()
         {
             //var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://guntza22:guntza220938@ds026558.mlab.com:26558/electionmana"));
-            //var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://guntza22:guntza220938@ds151805.mlab.com:51805/electionmanav2"));
             var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://thes:zk70NWOArstd28WKZzMzecE0qF9fYD8TD89SMkLt9jbRuaCSFyNDBkP1lS2SbxVbDXvtzTuuKHphEZS5fBDifg==@thes.documents.azure.com:10255/Election?ssl=true&replicaSet=globaldb"));
             settings.SslSettings = new SslSettings()
             {
@@ -36,7 +33,7 @@ namespace Election.Api.Controllers
             };
             var mongoClient = new MongoClient(settings);
             // mlab
-            //database = mongoClient.GetDatabase("electionmana");
+            //var database = mongoClient.GetDatabase("electionmana");
             // Azure
             var database = mongoClient.GetDatabase("Election");
             Table4Collection = database.GetCollection<ScoreArea>("Table4");
@@ -232,12 +229,24 @@ namespace Election.Api.Controllers
         }
         //===================================================== Api Upload File and UpdateData ==========================================
         [HttpPost]
-        public void MockTable2()
+        public async Task MockTable2()
         {
             var csvReader = new ReadCsv();
             var listTable2 = csvReader.MockPrototypeDataTable2();
-            Table4Collection.DeleteMany(it => true);
-            Table4Collection.InsertMany(listTable2);
+            var dataTable4 = Table4Collection.Find(it => true).ToList();
+            foreach (var data in dataTable4)
+            {
+                Table4Collection.DeleteOne(it => it.Id == data.Id);
+            }
+            const int AtATime = 100;
+            const int Delay = 700;
+            for (int i = 0; i < listTable2.Count; i += AtATime)
+            {
+                var list = listTable2.Skip(i).Take(AtATime);
+                Table4Collection.InsertMany(list);
+                await Task.Delay(Delay);
+            }
+           
         }
         [HttpPost]
         public async Task UploadFile()
@@ -316,13 +325,12 @@ namespace Election.Api.Controllers
 
             const int AtATime = 100;
             const int Delay = 700;
-            for (int i = 0; i < listScorePoll.Count; i+= AtATime)
+            for (int i = 0; i < listScorePoll.Count; i += AtATime)
             {
                 var list = listScorePoll.Skip(i).Take(AtATime);
                 FinalScorePollCollection.InsertMany(list);
                 await Task.Delay(Delay);
             }
-
             //update Score Table 4
             var getDataFromScorePoll = FinalScorePollCollection.Find(it => true).ToList();
             var getTable4 = Table4Collection.Find(it => true).ToList();
@@ -361,7 +369,8 @@ namespace Election.Api.Controllers
         }
 
         [HttpPost]
-        public void UpdatePartyScore()
+        // public void UpdatePartyScore()
+        public async Task UpdatePartyScore()
         {
             var dataScoreArea = Table4Collection.Find(it => true).ToList();
             var totalScore = dataScoreArea.Sum(it => it.Score);
@@ -439,17 +448,23 @@ namespace Election.Api.Controllers
                     }
                 }
             }
-
             //Hack: move to upload process
+            const int AtATime = 100;
+            const int Delay = 700;
             listPartyFinal.AddRange(listParty);
             var finalPartyScores = FinalPartyScoreCollection.Find(it => true).ToList();
             foreach (var finalPartyScore in finalPartyScores)
             {
                 FinalPartyScoreCollection.DeleteOne(it => it.Id == finalPartyScore.Id);
             }
-            
             var sortData = listPartyFinal.OrderByDescending(it => it.PercentScore).ToList();
-            FinalPartyScoreCollection.InsertMany(sortData);
+            for (int i = 0; i < sortData.Count; i += AtATime)
+            {
+                var list = sortData.Skip(i).Take(AtATime);
+                FinalPartyScoreCollection.InsertMany(list);
+                await Task.Delay(Delay);
+            }
+            // FinalPartyScoreCollection.InsertMany(sortData);
         }
 
         [HttpPost("{id}/{statusAllies}")]
@@ -491,11 +506,23 @@ namespace Election.Api.Controllers
             return getArea;
         }
         [HttpPost]
-        public void UpdateTable2()
+        // public void UpdateTable2()
+        public async Task UpdateTable2()
         {
             var getData = Table4Collection.Find(it => true).ToList();
-            Table2Collection.DeleteMany(it => true);
-            Table2Collection.InsertMany(getData);
+            var dataTable2 = Table2Collection.Find(it => true).ToList();
+            foreach (var data in dataTable2)
+            {
+                Table2Collection.DeleteOne(it => it.Id == data.Id);
+            }
+            const int AtATime = 100;
+            const int Delay = 700;
+            for (int i = 0; i < getData.Count; i += AtATime)
+            {
+                var list = getData.Skip(i).Take(AtATime);
+                Table2Collection.InsertMany(list);
+                await Task.Delay(Delay);
+            }
         }
 
         [HttpGet("{getTag}")]
@@ -540,20 +567,57 @@ namespace Election.Api.Controllers
         }
 
         [HttpPost]
-        public void UpdateScorePartyApp1()
+        // public void UpdateScorePartyApp1()
+        public async Task UpdateScorePartyApp1()
         {
             var getDataScorePartyFormApp2 = FinalPartyScoreCollection.Find(it => true).ToList();
-            App1PartyScoreCollection.DeleteMany(it => true);
-            App1PartyScoreCollection.InsertMany(getDataScorePartyFormApp2);
+            var dataApp1PartyScore = App1PartyScoreCollection.Find(it => true).ToList();
+            foreach (var data in dataApp1PartyScore)
+            {
+                App1PartyScoreCollection.DeleteOne(it => it.Id == data.Id);
+            }
+            const int AtATime = 100;
+            const int Delay = 700;
+            for (int i = 0; i < getDataScorePartyFormApp2.Count; i += AtATime)
+            {
+                var list = getDataScorePartyFormApp2.Skip(i).Take(AtATime);
+                App1PartyScoreCollection.InsertMany(list);
+                await Task.Delay(Delay);
+            }
         }
         //Mock Final Table4
         [HttpPost]
-        public void MockFinalTable4()
+        // public void MockFinalTable4()
+        public async Task MockFinalTable4()
         {
             var csvReader = new ReadCsv();
             var listDataTable4FromCsv = csvReader.MockPrototypeDataTable2().OrderBy(it => it.IdArea).ToList();
-            FinalTable4Collection.DeleteMany(it => true);
-            FinalTable4Collection.InsertMany(listDataTable4FromCsv);
+            var dataFinalTAble4 = FinalTable4Collection.Find(it => true).ToList();
+            foreach (var data in dataFinalTAble4)
+            {
+                FinalTable4Collection.DeleteOne(it => it.Id == data.Id);
+            }
+            const int AtATime = 100;
+            const int Delay = 700;
+            for (int i = 0; i < listDataTable4FromCsv.Count; i += AtATime)
+            {
+                var list = listDataTable4FromCsv.Skip(i).Take(AtATime);
+                FinalTable4Collection.InsertMany(list);
+                await Task.Delay(Delay);
+            }
+            //  var dataTable4 = Table4Collection.Find(it => true).ToList();
+            // foreach (var data in dataTable4)
+            // {
+            //     Table4Collection.DeleteOne(it => it.Id == data.Id);
+            // }
+            // const int AtATime = 100;
+            // const int Delay = 700;
+            // for (int i = 0; i < listTable2.Count; i += AtATime)
+            // {
+            //     var list = listTable2.Skip(i).Take(AtATime);
+            //     Table4Collection.InsertMany(list);
+            //     await Task.Delay(Delay);
+            // }
         }
     }
 }
