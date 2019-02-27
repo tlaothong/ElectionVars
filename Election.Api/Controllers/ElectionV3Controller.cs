@@ -16,6 +16,8 @@ namespace Election.Api.Controllers
     [Route("api/[controller]/[action]")]
     public class ElectionV3Controller : Controller
     {
+        private readonly IMongoDatabase database;
+
         IMongoCollection<ScoreArea> Table4Collection { get; set; }
         IMongoCollection<ScoreArea> FinalTable4Collection { get; set; }
         IMongoCollection<ScoreArea> Table2Collection { get; set; }
@@ -25,18 +27,18 @@ namespace Election.Api.Controllers
 
         public ElectionV3Controller()
         {
-            var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://guntza22:guntza220938@ds026558.mlab.com:26558/electionmana"));
+            //var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://guntza22:guntza220938@ds026558.mlab.com:26558/electionmana"));
             //var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://guntza22:guntza220938@ds151805.mlab.com:51805/electionmanav2"));
-            //var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://thes:zk70NWOArstd28WKZzMzecE0qF9fYD8TD89SMkLt9jbRuaCSFyNDBkP1lS2SbxVbDXvtzTuuKHphEZS5fBDifg==@thes.documents.azure.com:10255/Election?ssl=true&replicaSet=globaldb"));
+            var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://thes:zk70NWOArstd28WKZzMzecE0qF9fYD8TD89SMkLt9jbRuaCSFyNDBkP1lS2SbxVbDXvtzTuuKHphEZS5fBDifg==@thes.documents.azure.com:10255/Election?ssl=true&replicaSet=globaldb"));
             settings.SslSettings = new SslSettings()
             {
                 EnabledSslProtocols = SslProtocols.Tls12
             };
             var mongoClient = new MongoClient(settings);
             // mlab
-            var database = mongoClient.GetDatabase("electionmana");
+            //database = mongoClient.GetDatabase("electionmana");
             // Azure
-            //var database = mongoClient.GetDatabase("Election");
+            var database = mongoClient.GetDatabase("Election");
             Table4Collection = database.GetCollection<ScoreArea>("Table4");
             FinalTable4Collection = database.GetCollection<ScoreArea>("FinalTable4");
             Table2Collection = database.GetCollection<ScoreArea>("Table2");
@@ -238,7 +240,7 @@ namespace Election.Api.Controllers
             Table4Collection.InsertMany(listTable2);
         }
         [HttpPost]
-        public void UploadFile()
+        public async Task UploadFile()
         {
             // Read
             var listScoreCsv = new List<ScorePollCsv>();
@@ -311,7 +313,16 @@ namespace Election.Api.Controllers
                     }
                 }
             }
-            FinalScorePollCollection.InsertMany(listScorePoll);
+
+            const int AtATime = 100;
+            const int Delay = 700;
+            for (int i = 0; i < listScorePoll.Count; i+= AtATime)
+            {
+                var list = listScorePoll.Skip(i).Take(AtATime);
+                FinalScorePollCollection.InsertMany(list);
+                await Task.Delay(Delay);
+            }
+
             //update Score Table 4
             var getDataFromScorePoll = FinalScorePollCollection.Find(it => true).ToList();
             var getTable4 = Table4Collection.Find(it => true).ToList();
@@ -334,8 +345,19 @@ namespace Election.Api.Controllers
                     }
                 }
             }
-            Table4Collection.DeleteMany(it => true);
-            Table4Collection.InsertMany(listTable4);
+
+            var idAreas = getTable4.GroupBy(it => it.IdArea).Select(x => x.First()).Select(it => it.IdArea).ToArray();
+            foreach (var idArea in idAreas)
+            {
+                Table4Collection.DeleteMany(it => it.IdArea == idArea);
+            }
+
+            for (int i = 0; i < listTable4.Count; i += AtATime)
+            {
+                var list = listTable4.Skip(i).Take(AtATime);
+                Table4Collection.InsertMany(list);
+                await Task.Delay(Delay);
+            }
         }
 
         [HttpPost]
@@ -418,8 +440,14 @@ namespace Election.Api.Controllers
                 }
             }
 
+            //Hack: move to upload process
             listPartyFinal.AddRange(listParty);
-            FinalPartyScoreCollection.DeleteMany(it => true);
+            var finalPartyScores = FinalPartyScoreCollection.Find(it => true).ToList();
+            foreach (var finalPartyScore in finalPartyScores)
+            {
+                FinalPartyScoreCollection.DeleteOne(it => it.Id == finalPartyScore.Id);
+            }
+            
             var sortData = listPartyFinal.OrderByDescending(it => it.PercentScore).ToList();
             FinalPartyScoreCollection.InsertMany(sortData);
         }
