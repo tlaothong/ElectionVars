@@ -155,45 +155,6 @@ namespace Election.Api.Controllers
                     }
                 }
             }
-            // set tag
-            // var getDataUpdate2 = Table4Collection.Find(it => true).ToList();
-            // var groupByArea2 = getDataUpdate2.GroupBy(it => it.IdArea).ToList();
-            // var listUpdate = new List<ScoreArea>();
-            // foreach (var item in groupByArea2)
-            // {
-            //     var maxScore = item.Max(it => it.Score);
-            //     foreach (var data in item)
-            //     {
-            //         if (data.Score == maxScore)
-            //         {
-            //             if (data.Tags.Any(i => i != "ชนะ"))
-            //             {
-            //                 data.Tags.Remove("แพ้");
-            //                 data.Tags.Add("ชนะ");
-            //                 listUpdate.Add(data);
-            //             }
-            //             else
-            //             {
-            //                 listUpdate.Add(data);
-            //             }
-            //         }
-            //         else
-            //         {
-            //             if (data.Tags.Any(i => i == "ชนะ"))
-            //             {
-            //                 data.Tags.Remove("ชนะ");
-            //                 data.Tags.Add("แพ้");
-            //                 listUpdate.Add(data);
-            //             }
-            //             else
-            //             {
-            //                 listUpdate.Add(data);
-            //             }
-            //         }
-            //     }
-            // }
-            // Table4Collection.DeleteMany(it => true);
-            // Table4Collection.InsertMany(listUpdate);
         }
 
         [HttpGet]
@@ -268,6 +229,14 @@ namespace Election.Api.Controllers
             return FinalPartyScoreCollection.Find(it => true).ToList().OrderByDescending(it => it.PercentScore).ToList();
         }
         //===================================================== Api Upload File and UpdateData ==========================================
+        [HttpPost]
+        public void MockTable2()
+        {
+            var csvReader = new ReadCsv();
+            var listTable2 = csvReader.MockPrototypeDataTable2();
+            Table4Collection.DeleteMany(it => true);
+            Table4Collection.InsertMany(listTable2);
+        }
         [HttpPost]
         public void UploadFile()
         {
@@ -367,45 +336,6 @@ namespace Election.Api.Controllers
             }
             Table4Collection.DeleteMany(it => true);
             Table4Collection.InsertMany(listTable4);
-            // Set Tags
-            // var getDataT4 = Table4Collection.Find(it => true).ToList().GroupBy(it => it.IdArea).ToList();
-            // var listUpdateTag = new List<ScoreArea>();
-            // foreach (var data in getDataT4)
-            // {
-            //     var maxScoreOfArea = data.Max(it => it.Score);
-            //     foreach (var item in data)
-            //     {
-            //         var tagDefault = (item.Score == maxScoreOfArea) ? "ชนะ" : "แพ้";
-            //         if (item.Score == maxScoreOfArea)
-            //         {
-            //             if (item.Tags.Any(i => i != "ชนะ"))
-            //             {
-            //                 item.Tags.Remove("แพ้");
-            //                 item.Tags.Add("ชนะ");
-            //                 listUpdateTag.Add(item);
-            //             }
-            //             else
-            //             {
-            //                 listUpdateTag.Add(item);
-            //             }
-            //         }
-            //         else
-            //         {
-            //             if (item.Tags.Any(i => i == "ชนะ"))
-            //             {
-            //                 item.Tags.Remove("ชนะ");
-            //                 item.Tags.Add("แพ้");
-            //                 listUpdateTag.Add(item);
-            //             }
-            //             else
-            //             {
-            //                 listUpdateTag.Add(item);
-            //             }
-            //         }
-            //     }
-            // }
-            // Table4Collection.DeleteMany(it => true);
-            // Table4Collection.InsertMany(listUpdateTag);
         }
 
         [HttpPost]
@@ -445,21 +375,6 @@ namespace Election.Api.Controllers
                     PercentScore = Math.Round(totalScoreParty / ratio) * 100 / totalSS
                 });
             }
-            // var listParty = dataScoreArea.GroupBy(it => it.IdParty)
-            // .Select(it => new PartyList
-            // {
-            //     Id = Guid.NewGuid().ToString(),
-            //     IdParty = it.Key,
-            //     PartyName = it.FirstOrDefault().NameParty,
-            //     NameInitial = it.FirstOrDefault().NameInitial,
-            //     TotalScore = it.Sum(i => i.Score),
-            //     HaveScoreDigit = it.Sum(i => i.Score) / ratio,
-            //     HaveScore = Math.Round(it.Sum(i => i.Score) / ratio),
-            //     AreaScore = it.Count(i => i.Tags.Any(x => x == "ชนะ")),
-            //     NameListScore = Math.Round(it.Sum(i => i.Score) / ratio) - it.Count(i => i.Tags.Any(x => x == "ชนะ")),
-            //     PercentScore = Math.Round(it.Sum(i => i.Score) / ratio) * 100 / totalSS
-            // }).ToList();
-
             while (listParty.Sum(it => it.HaveScore) < totalSS || listParty.Any(it => it.HaveScore < it.AreaScore))
             {
                 if (listParty.Sum(it => it.HaveScore) < totalSS)
@@ -507,6 +422,14 @@ namespace Election.Api.Controllers
             FinalPartyScoreCollection.DeleteMany(it => true);
             var sortData = listPartyFinal.OrderByDescending(it => it.PercentScore).ToList();
             FinalPartyScoreCollection.InsertMany(sortData);
+        }
+
+        [HttpPost("{id}/{statusAllies}")]
+        public void SetStatusAllies(string id, string statusAllies)
+        {
+            var dataPartyScore = FinalPartyScoreCollection.Find(it => it.Id == id).FirstOrDefault();
+            dataPartyScore.StatusAllies = statusAllies;
+            FinalPartyScoreCollection.ReplaceOne(it => it.Id == id, dataPartyScore);
         }
 
         // Api App1 Table 2 ========================================================================================
@@ -607,4 +530,58 @@ namespace Election.Api.Controllers
     }
 }
 
+// set tag
+// var getDataUpdate2 = Table4Collection.Find(it => true).ToList();
+// var groupByArea2 = getDataUpdate2.GroupBy(it => it.IdArea).ToList();
+// var listUpdate = new List<ScoreArea>();
+// foreach (var item in groupByArea2)
+// {
+//     var maxScore = item.Max(it => it.Score);
+//     foreach (var data in item)
+//     {
+//         if (data.Score == maxScore)
+//         {
+//             if (data.Tags.Any(i => i != "ชนะ"))
+//             {
+//                 data.Tags.Remove("แพ้");
+//                 data.Tags.Add("ชนะ");
+//                 listUpdate.Add(data);
+//             }
+//             else
+//             {
+//                 listUpdate.Add(data);
+//             }
+//         }
+//         else
+//         {
+//             if (data.Tags.Any(i => i == "ชนะ"))
+//             {
+//                 data.Tags.Remove("ชนะ");
+//                 data.Tags.Add("แพ้");
+//                 listUpdate.Add(data);
+//             }
+//             else
+//             {
+//                 listUpdate.Add(data);
+//             }
+//         }
+//     }
+// }
+// Table4Collection.DeleteMany(it => true);
+// Table4Collection.InsertMany(listUpdate);
+
+// var listParty = dataScoreArea.GroupBy(it => it.IdParty)
+// .Select(it => new PartyList
+// {
+//     Id = Guid.NewGuid().ToString(),
+//     IdParty = it.Key,
+//     PartyName = it.FirstOrDefault().NameParty,
+//     NameInitial = it.FirstOrDefault().NameInitial,
+//     TotalScore = it.Sum(i => i.Score),
+//     HaveScoreDigit = it.Sum(i => i.Score) / ratio,
+//     HaveScore = Math.Round(it.Sum(i => i.Score) / ratio),
+//     AreaScore = it.Count(i => i.Tags.Any(x => x == "ชนะ")),
+//     NameListScore = Math.Round(it.Sum(i => i.Score) / ratio) - it.Count(i => i.Tags.Any(x => x == "ชนะ")),
+//     PercentScore = Math.Round(it.Sum(i => i.Score) / ratio) * 100 / totalSS
+// }).ToList();
 
