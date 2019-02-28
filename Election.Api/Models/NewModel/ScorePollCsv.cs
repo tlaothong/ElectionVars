@@ -13,6 +13,7 @@ namespace Election.Api.Models
         public string IdArea { get; set; }
         public string NameArea { get; set; }
         public string Region { get; set; }
+        public string IdRegion { get; set; }
         public float Score { get; set; }
     }
 }
