@@ -3,7 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Election.Api.Models
 {
-    public class test
+    public class MyParty
     {
         [BsonId]
         public string Id { get; set; }
@@ -13,5 +13,7 @@ namespace Election.Api.Models
         public double scoreMax { get; set; }
         public double scoreMyParty { get; set; }
         public bool StatusAreaEdit { get; set; }
+        public string Region { get; set; }
+        public string IdRegion { get; set; }
     }
 }

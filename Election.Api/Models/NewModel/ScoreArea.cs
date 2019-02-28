@@ -21,5 +21,7 @@ namespace Election.Api.Models
         public string Source { get; set; }
         public bool StatusEdit { get; set; }
         public bool StatusAreaEdit { get; set; }
+        public string Region { get; set; }
+        public string IdRegion { get; set; }
     }
 }

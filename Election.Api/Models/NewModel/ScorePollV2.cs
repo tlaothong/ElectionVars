@@ -18,5 +18,7 @@ namespace Election.Api.Models
         public string Source { get; set; }
         public double TargetScoreDefault { get; set; }
         public double TargetScore { get; set; }
+        public string Region { get; set; }
+        public string IdRegion { get; set; }
     }
 }

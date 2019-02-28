@@ -25,17 +25,17 @@ namespace Election.Api.Controllers
 
         public ElectionV3Controller()
         {
-            //var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://guntza22:guntza220938@ds026558.mlab.com:26558/electionmana"));
-            var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://thes:zk70NWOArstd28WKZzMzecE0qF9fYD8TD89SMkLt9jbRuaCSFyNDBkP1lS2SbxVbDXvtzTuuKHphEZS5fBDifg==@thes.documents.azure.com:10255/Election?ssl=true&replicaSet=globaldb"));
+            var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://guntza22:guntza220938@ds026558.mlab.com:26558/electionmana"));
+            //var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://thes:zk70NWOArstd28WKZzMzecE0qF9fYD8TD89SMkLt9jbRuaCSFyNDBkP1lS2SbxVbDXvtzTuuKHphEZS5fBDifg==@thes.documents.azure.com:10255/Election?ssl=true&replicaSet=globaldb"));
             settings.SslSettings = new SslSettings()
             {
                 EnabledSslProtocols = SslProtocols.Tls12
             };
             var mongoClient = new MongoClient(settings);
             // mlab
-            //var database = mongoClient.GetDatabase("electionmana");
+            var database = mongoClient.GetDatabase("electionmana");
             // Azure
-            var database = mongoClient.GetDatabase("Election");
+            //var database = mongoClient.GetDatabase("Election");
             Table4Collection = database.GetCollection<ScoreArea>("Table4");
             FinalTable4Collection = database.GetCollection<ScoreArea>("FinalTable4");
             Table2Collection = database.GetCollection<ScoreArea>("Table2");
@@ -103,7 +103,7 @@ namespace Election.Api.Controllers
         public List<ScoreArea> GetAreaWithTag(string getTag)
         {
             var getData = Table4Collection.Find(it => it.IdParty == "034" && it.Tags.Any(i => i == getTag)).ToList()
-            .OrderBy(it => it.IdArea).ToList();
+            .OrderBy(it => it.IdRegion).OrderBy(it => it.IdArea).ToList();
             return getData;
         }
 
@@ -170,7 +170,8 @@ namespace Election.Api.Controllers
                 var getArea = item.FirstOrDefault(it => it.IdArea == item.Key);
                 listArea.Add(getArea);
             }
-            return listArea.OrderBy(it => it.IdArea).ToList();
+            var sortData = listArea.OrderBy(it => it.IdRegion).OrderBy(it => it.IdArea).ToList();
+            return sortData;
         }
 
         [HttpGet("{idParty}")]
@@ -191,20 +192,21 @@ namespace Election.Api.Controllers
                     }
                 }
             }
-            var listPartyWin = listWinParty.Where(it => it.IdParty == idParty).ToList();
+            var listPartyWin = listWinParty.Where(it => it.IdParty == idParty)
+            .OrderBy(it => it.IdRegion).OrderBy(it => it.IdArea).ToList();
             return listPartyWin;
         }
 
         [HttpGet]
-        public List<test> GetMaxScoreAndMyScore()
+        public List<MyParty> GetMaxScoreAndMyScore()
         {
             var getData = Table4Collection.Find(it => true).ToList().GroupBy(it => it.IdArea);
-            var listScore = new List<test>();
+            var listScore = new List<MyParty>();
             foreach (var item in getData)
             {
                 var getWinnerArea = item.FirstOrDefault(it => it.Score == item.Max(i => i.Score));
                 var getMyParty = item.FirstOrDefault(it => it.IdParty == "034");
-                listScore.Add(new test
+                listScore.Add(new MyParty
                 {
                     Id = Guid.NewGuid().ToString(),
                     IdArea = item.Key,
@@ -212,10 +214,12 @@ namespace Election.Api.Controllers
                     PartyWin = getWinnerArea.NameParty,
                     scoreMax = getWinnerArea.Score,
                     scoreMyParty = getMyParty.Score,
-                    StatusAreaEdit = getMyParty.StatusAreaEdit
+                    StatusAreaEdit = getMyParty.StatusAreaEdit,
+                    Region = getMyParty.Region,
+                    IdRegion = getMyParty.IdRegion
                 });
             }
-            var sortData = listScore.OrderBy(it => it.IdArea).ToList();
+            var sortData = listScore.OrderBy(it => it.IdRegion).OrderBy(it => it.IdArea).ToList();
             return sortData;
         }
 
@@ -268,7 +272,7 @@ namespace Election.Api.Controllers
                         var getData = item.Split(',').ToList();
                         if (getData[0] != "รหัสพรรค" && getData[1] != "ชื่อเขต" &&
                         getData[2] != "รหัสเขต " && getData[3] != "ชื่อพรรค" && getData[4] != "เปอร์เซ็น/คะแนน"
-                        && getData[5] != "ภูมิภาค" && getData[4] != "")
+                        && getData[5] != "ภูมิภาค" && getData[6] != "รหัสภูมิภาค" && getData[4] != "")
                         {
                             float.TryParse(getData[4], out float score);
                             listScoreCsv.Add(new ScorePollCsv
@@ -279,7 +283,8 @@ namespace Election.Api.Controllers
                                 IdArea = getData[2],
                                 NameArea = getData[1],
                                 Score = score,
-                                Region = getData[5]
+                                Region = getData[5],
+                                IdRegion = getData[6]
                             });
                         }
                     }
@@ -306,7 +311,9 @@ namespace Election.Api.Controllers
                             datePoll = DateTime.Now,
                             Score = ScoreParty,
                             PercentScore = datas.Score,
-                            Source = "Poll"
+                            Source = "Poll",
+                            Region = datas.Region,
+                            IdRegion = datas.IdRegion
                         });
                     }
                     else
@@ -321,7 +328,9 @@ namespace Election.Api.Controllers
                             datePoll = DateTime.Now,
                             Score = datas.Score,
                             PercentScore = datas.Score,
-                            Source = "Poll"
+                            Source = "Poll",
+                            Region = datas.Region,
+                            IdRegion = datas.IdRegion
                         });
                     }
                 }
@@ -353,6 +362,8 @@ namespace Election.Api.Controllers
                         getTable4Update.Source = getCurrentData.Source;
                         getTable4Update.StatusEdit = false;
                         getTable4Update.StatusAreaEdit = false;
+                        getTable4Update.Region = getCurrentData.Region;
+                        getTable4Update.IdRegion = getCurrentData.IdRegion;
                         listTable4.Add(getTable4Update);
                     }
                 }
@@ -485,7 +496,9 @@ namespace Election.Api.Controllers
         [HttpGet]
         public List<ScoreArea> GetTable2()
         {
-            var getDataTable2 = Table2Collection.Find(it => true).ToList().OrderBy(it => it.IdArea).ToList();
+            var getDataTable2 = Table2Collection.Find(it => true).ToList()
+            .OrderBy(it => it.IdRegion)
+            .OrderBy(it => it.IdArea).ToList();
             return getDataTable2;
         }
 
@@ -501,7 +514,8 @@ namespace Election.Api.Controllers
                 var getData = data.FirstOrDefault();
                 listArea.Add(getData);
             }
-            return listArea;
+            var sortData = listArea.OrderBy(it => it.IdRegion).OrderBy(it => it.IdArea).ToList();
+            return sortData;
         }
 
         [HttpGet("{idArea}")]
@@ -535,6 +549,7 @@ namespace Election.Api.Controllers
         public List<ScoreArea> GetAreaWithTagTable2(string getTag)
         {
             var getData = Table2Collection.Find(it => it.IdParty == "034" && it.Tags.Any(i => i == getTag)).ToList()
+            .OrderBy(it => it.IdRegion)
             .OrderBy(it => it.IdArea).ToList();
             return getData;
         }
@@ -611,22 +626,24 @@ namespace Election.Api.Controllers
                 FinalTable4Collection.InsertMany(list);
                 await Task.Delay(Delay);
             }
-            //  var dataTable4 = Table4Collection.Find(it => true).ToList();
-            // foreach (var data in dataTable4)
-            // {
-            //     Table4Collection.DeleteOne(it => it.Id == data.Id);
-            // }
-            // const int AtATime = 100;
-            // const int Delay = 700;
-            // for (int i = 0; i < listTable2.Count; i += AtATime)
-            // {
-            //     var list = listTable2.Skip(i).Take(AtATime);
-            //     Table4Collection.InsertMany(list);
-            //     await Task.Delay(Delay);
-            // }
         }
     }
 }
+
+
+//  var dataTable4 = Table4Collection.Find(it => true).ToList();
+// foreach (var data in dataTable4)
+// {
+//     Table4Collection.DeleteOne(it => it.Id == data.Id);
+// }
+// const int AtATime = 100;
+// const int Delay = 700;
+// for (int i = 0; i < listTable2.Count; i += AtATime)
+// {
+//     var list = listTable2.Skip(i).Take(AtATime);
+//     Table4Collection.InsertMany(list);
+//     await Task.Delay(Delay);
+// }
 
 // set tag
 // var getDataUpdate2 = Table4Collection.Find(it => true).ToList();
