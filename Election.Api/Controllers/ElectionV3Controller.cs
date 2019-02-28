@@ -407,6 +407,7 @@ namespace Election.Api.Controllers
         public async Task UpdatePartyScore()
         {
             var dataScoreArea = Table4Collection.Find(it => true).ToList();
+            var dataScoreParty = FinalPartyScoreCollection.Find(it => true).ToList();
             var totalScore = dataScoreArea.Sum(it => it.Score);
             var totalSS = 500.0;
             var ratio = Convert.ToInt32(totalScore / totalSS);
@@ -426,6 +427,7 @@ namespace Election.Api.Controllers
             {
                 var totalScoreParty = data.Sum(it => it.Score);
                 var scoreWithArea = listPartyWin.Count(it => it.IdParty == data.Key);
+                var statusAlly = dataScoreParty.FirstOrDefault(it => it.IdParty == data.Key).StatusAllies;
                 listParty.Add(new PartyList
                 {
                     Id = Guid.NewGuid().ToString(),
@@ -437,7 +439,8 @@ namespace Election.Api.Controllers
                     HaveScore = Math.Round(totalScoreParty / ratio),
                     AreaScore = scoreWithArea,
                     NameListScore = Math.Round(totalScoreParty / ratio) - scoreWithArea,
-                    PercentScore = Math.Round(totalScoreParty / ratio) * 100 / totalSS
+                    PercentScore = Math.Round(totalScoreParty / ratio) * 100 / totalSS,
+                    StatusAllies = statusAlly
                 });
             }
             while (listParty.Sum(it => it.HaveScore) < totalSS || listParty.Any(it => it.HaveScore < it.AreaScore))
@@ -483,21 +486,23 @@ namespace Election.Api.Controllers
                 }
             }
             //Hack: move to upload process
-            const int AtATime = 100;
-            const int Delay = 700;
+            // const int AtATime = 100;
+            // const int Delay = 700;
             listPartyFinal.AddRange(listParty);
-            var finalPartyScores = FinalPartyScoreCollection.Find(it => true).ToList();
-            foreach (var finalPartyScore in finalPartyScores)
-            {
-                FinalPartyScoreCollection.DeleteOne(it => it.Id == finalPartyScore.Id);
-            }
-            var sortData = listPartyFinal.OrderByDescending(it => it.PercentScore).ToList();
-            for (int i = 0; i < sortData.Count; i += AtATime)
-            {
-                var list = sortData.Skip(i).Take(AtATime);
-                FinalPartyScoreCollection.InsertMany(list);
-                await Task.Delay(Delay);
-            }
+            FinalPartyScoreCollection.DeleteMany(it => true);
+            FinalPartyScoreCollection.InsertMany(listPartyFinal);
+            // var finalPartyScores = FinalPartyScoreCollection.Find(it => true).ToList();
+            // foreach (var finalPartyScore in finalPartyScores)
+            // {
+            //     FinalPartyScoreCollection.DeleteOne(it => it.Id == finalPartyScore.Id);
+            // }
+            // var sortData = listPartyFinal.OrderByDescending(it => it.PercentScore).ToList();
+            // for (int i = 0; i < sortData.Count; i += AtATime)
+            // {
+            //     var list = sortData.Skip(i).Take(AtATime);
+            //     FinalPartyScoreCollection.InsertMany(list);
+            //     await Task.Delay(Delay);
+            // }
             // FinalPartyScoreCollection.InsertMany(sortData);
         }
 
@@ -511,6 +516,30 @@ namespace Election.Api.Controllers
             FinalPartyScoreCollection.ReplaceOne(it => it.Id == id, dataPartyScore);
         }
 
+        [HttpGet]
+        public List<string> GetAllStatusAllies()
+        {
+            var dataScoreParty = FinalPartyScoreCollection.Find(it => true).ToList();
+            var listStatus = new List<string>();
+            foreach (var data in dataScoreParty)
+            {
+                listStatus.Add(data.StatusAllies);
+            }
+            var sortStatusAlly = listStatus.GroupBy(it => it).ToList();
+            var list2 = new List<string>();
+            foreach (var data in sortStatusAlly)
+            {
+                list2.Add(data.Key);
+            }
+            return list2;
+        }
+
+        [HttpGet("{statusAllies}")]
+        public List<PartyList> GetScorePartyByStatusAllies(string statusAllies)
+        {
+            var dataScoreParty = FinalPartyScoreCollection.Find(it => it.StatusAllies == statusAllies).ToList();
+            return dataScoreParty;
+        }
         // Api App1 Table 2 ========================================================================================
         [HttpGet]
         public List<ScoreArea> GetTable2()
