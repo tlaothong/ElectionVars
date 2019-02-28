@@ -86,9 +86,7 @@ namespace Election.Api.Controllers
             // getDataTable4.Tags.RemoveAll(it => it != "ชนะ" || it != "แพ้");
             getDataTable4.Tags.RemoveAll(it => true);
             getDataTable4.Tags.AddRange(listTags);
-            Table4Collection.DeleteOne(it => it.Id == getDataTable4.Id);
-            Table4Collection.InsertOne(getDataTable4);
-            // Table4Collection.ReplaceOne(it => it.Id == getDataTable4.Id, getDataTable4);
+            Table4Collection.ReplaceOne(it => it.IdArea == getDataTable4.IdArea && it.Id == getDataTable4.Id, getDataTable4);
         }
 
         [HttpGet("{idArea}")]
