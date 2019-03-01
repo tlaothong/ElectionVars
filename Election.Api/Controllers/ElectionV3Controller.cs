@@ -683,6 +683,12 @@ namespace Election.Api.Controllers
             FinalTable4Collection.DeleteMany(it => true);
             FinalTable4Collection.InsertMany(listDataTable4FromCsv);
         }
+        [HttpGet]
+        public List<ScoreArea> GetFinalTable4()
+        {
+            var dataFinalTAble4 = FinalTable4Collection.Find(it => true).ToList();
+            return dataFinalTAble4;
+        }
     }
 }
 
