@@ -120,7 +120,7 @@ namespace Election.Api.Controllers
                 foreach (var tags in data.Tags)
                 {
                     // if (tags != "ชนะ" && tags != "แพ้" && tags != "")
-                    if (tags != "")
+                    if (tags != "" && data.Tags.Any(i => i != tags))
                     {
                         listTag.Add(tags);
                     }
@@ -355,7 +355,7 @@ namespace Election.Api.Controllers
             }
             //FinalScorePollCollection.InsertMany(listScorePoll);
 
-            
+
             for (int i = 0; i < listScorePoll.Count; i += AtATime)
             {
                 var list = listScorePoll.Skip(i).Take(AtATime);
@@ -618,7 +618,7 @@ namespace Election.Api.Controllers
                 foreach (var tags in data.Tags)
                 {
                     // if (tags != "ชนะ" && tags != "แพ้" && tags != "")
-                    if (tags != "")
+                    if (tags != "" && data.Tags.Any(i => i != tags))
                     {
                         listTag.Add(tags);
                     }
