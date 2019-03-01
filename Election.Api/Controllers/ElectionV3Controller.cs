@@ -262,10 +262,10 @@ namespace Election.Api.Controllers
             var csvReader = new ReadCsv();
             var listTable2 = csvReader.MockPrototypeDataTable2();
             var dataTable4 = Table4Collection.Find(it => true).ToList();
-            foreach (var data in dataTable4)
-            {
-                Table4Collection.DeleteOne(it => it.Id == data.Id);
-            }
+            //foreach (var data in dataTable4)
+            //{
+            //    Table4Collection.DeleteOne(it => it.Id == data.Id);
+            //}
             for (int i = 0; i < listTable2.Count; i += AtATime)
             {
                 var list = listTable2.Skip(i).Take(AtATime);
@@ -382,6 +382,7 @@ namespace Election.Api.Controllers
                         getTable4Update.StatusAreaEdit = false;
                         getTable4Update.Region = getCurrentData.Region;
                         getTable4Update.IdRegion = getCurrentData.IdRegion;
+                        getTable4Update.Tags = new List<string>() { "" };
                         listTable4.Add(getTable4Update);
                     }
                 }
