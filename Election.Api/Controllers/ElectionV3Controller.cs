@@ -390,7 +390,7 @@ namespace Election.Api.Controllers
                         getTable4Update.Region = getCurrentData.Region;
                         getTable4Update.IdRegion = getCurrentData.IdRegion;
                         // create tag
-                        getTable4Update.Tags = new List<string>();
+                        // getTable4Update.Tags = new List<string>();
                         listTable4.Add(getTable4Update);
                     }
                 }
