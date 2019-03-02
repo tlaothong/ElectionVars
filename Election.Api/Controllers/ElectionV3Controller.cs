@@ -28,17 +28,17 @@ namespace Election.Api.Controllers
 
         public ElectionV3Controller()
         {
-            //var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://guntza22:guntza220938@ds026558.mlab.com:26558/electionmana"));
-            var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://thes:zk70NWOArstd28WKZzMzecE0qF9fYD8TD89SMkLt9jbRuaCSFyNDBkP1lS2SbxVbDXvtzTuuKHphEZS5fBDifg==@thes.documents.azure.com:10255/Election?ssl=true&replicaSet=globaldb"));
+            var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://guntza22:guntza220938@ds026558.mlab.com:26558/electionmana"));
+            //var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://thes:zk70NWOArstd28WKZzMzecE0qF9fYD8TD89SMkLt9jbRuaCSFyNDBkP1lS2SbxVbDXvtzTuuKHphEZS5fBDifg==@thes.documents.azure.com:10255/Election?ssl=true&replicaSet=globaldb"));
             settings.SslSettings = new SslSettings()
             {
                 EnabledSslProtocols = SslProtocols.Tls12
             };
             var mongoClient = new MongoClient(settings);
             // mlab
-            //var database = mongoClient.GetDatabase("electionmana");
+            var database = mongoClient.GetDatabase("electionmana");
             // Azure
-            var database = mongoClient.GetDatabase("Election");
+            //var database = mongoClient.GetDatabase("Election");
             Table4Collection = database.GetCollection<ScoreArea>("Table4");
             FinalTable4Collection = database.GetCollection<ScoreArea>("FinalTable4");
             Table2Collection = database.GetCollection<ScoreArea>("Table2");
@@ -98,6 +98,7 @@ namespace Election.Api.Controllers
             var tagDataTable4 = Table4Collection.Find(it => it.IdArea == idArea.ToUpper() && it.IdParty == "034").FirstOrDefault();
             var tags = new TextTag();
             // tagDataTable4.Tags.RemoveAll(it => it == "ชนะ" || it == "แพ้");
+
             tags.Text = string.Join("#", tagDataTable4.Tags);
             return tags;
         }
@@ -105,8 +106,7 @@ namespace Election.Api.Controllers
         [HttpGet("{getTag}")]
         public List<ScoreArea> GetAreaWithTag(string getTag)
         {
-            var getData = Table4Collection.Find(it => it.IdParty == "034" && it.Tags.Any(i => i == getTag)).ToList()
-            .OrderBy(it => it.IdRegion).OrderBy(it => it.IdArea).ToList();
+            var getData = Table4Collection.Find(it => it.IdParty == "034" && it.Tags.Any(i => i == getTag)).ToList();
             return getData;
         }
 
@@ -382,7 +382,8 @@ namespace Election.Api.Controllers
                         getTable4Update.StatusAreaEdit = false;
                         getTable4Update.Region = getCurrentData.Region;
                         getTable4Update.IdRegion = getCurrentData.IdRegion;
-                        getTable4Update.Tags = new List<string>() { "" };
+                        // create tag
+                        getTable4Update.Tags = new List<string>();
                         listTable4.Add(getTable4Update);
                     }
                 }
@@ -603,10 +604,12 @@ namespace Election.Api.Controllers
         [HttpGet("{getTag}")]
         public List<ScoreArea> GetAreaWithTagTable2(string getTag)
         {
-            var getData = Table2Collection.Find(it => it.IdParty == "034" && it.Tags.Any(i => i == getTag)).ToList()
-            .OrderBy(it => it.IdRegion)
-            .OrderBy(it => it.IdArea).ToList();
+            var getData = Table2Collection.Find(it => it.IdParty == "034" && it.Tags.Any(i => i == getTag)).ToList();
             return getData;
+            // var getData = Table2Collection.Find(it => it.IdParty == "034" && it.Tags.Any(i => i == getTag)).ToList()
+            // .OrderBy(it => it.IdRegion)
+            // .OrderBy(it => it.IdArea).ToList();
+            // return getData;
         }
 
         [HttpGet]
