@@ -390,7 +390,10 @@ namespace Election.Api.Controllers
                         getTable4Update.Region = getCurrentData.Region;
                         getTable4Update.IdRegion = getCurrentData.IdRegion;
                         // create tag
-                        // getTable4Update.Tags = new List<string>();
+                        if (getTable4Update.Tags == null)
+                        {
+                            getTable4Update.Tags = new List<string>();
+                        }
                         listTable4.Add(getTable4Update);
                     }
                 }
@@ -398,10 +401,25 @@ namespace Election.Api.Controllers
             //Table4Collection.DeleteMany(it => true);
             //Table4Collection.InsertMany(listTable4);
 
-            var idAreas = getTable4.GroupBy(it => it.IdArea).Select(x => x.First()).Select(it => it.IdArea).ToArray();
-            foreach (var idArea in idAreas)
+            // var idAreas = getTable4.GroupBy(it => it.IdArea).Select(x => x.First()).Select(it => it.IdArea).ToArray();
+
+            //   var dataTable2 = Table2Collection.Find(it => true).ToList()
+            //     .GroupBy(it => it.IdArea).ToList();
+            //     if (dataTable2 != null)
+            //     {
+            //         foreach (var data in dataTable2)
+            //         {
+            //             Table2Collection.DeleteMany(it => it.IdArea == data.Key);
+            //         }
+            //     }
+            var dataTable4Update = Table4Collection.Find(it => true).ToList()
+            .GroupBy(it => it.IdArea).ToList();
+            if (dataTable4Update != null)
             {
-                Table4Collection.DeleteMany(it => it.IdArea == idArea);
+                foreach (var data in dataTable4Update)
+                {
+                    Table4Collection.DeleteMany(it => it.IdArea == data.Key);
+                }
             }
 
             for (int i = 0; i < listTable4.Count; i += AtATime)
