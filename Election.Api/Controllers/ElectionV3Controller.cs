@@ -28,17 +28,17 @@ namespace Election.Api.Controllers
 
         public ElectionV3Controller()
         {
-            var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://guntza22:guntza220938@ds026558.mlab.com:26558/electionmana"));
-            //var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://thes:zk70NWOArstd28WKZzMzecE0qF9fYD8TD89SMkLt9jbRuaCSFyNDBkP1lS2SbxVbDXvtzTuuKHphEZS5fBDifg==@thes.documents.azure.com:10255/Election?ssl=true&replicaSet=globaldb"));
+            //var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://guntza22:guntza220938@ds026558.mlab.com:26558/electionmana"));
+            var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://thes:zk70NWOArstd28WKZzMzecE0qF9fYD8TD89SMkLt9jbRuaCSFyNDBkP1lS2SbxVbDXvtzTuuKHphEZS5fBDifg==@thes.documents.azure.com:10255/Election?ssl=true&replicaSet=globaldb"));
             settings.SslSettings = new SslSettings()
             {
                 EnabledSslProtocols = SslProtocols.Tls12
             };
             var mongoClient = new MongoClient(settings);
             // mlab
-            var database = mongoClient.GetDatabase("electionmana");
+            //var database = mongoClient.GetDatabase("electionmana");
             // Azure
-            //var database = mongoClient.GetDatabase("Election");
+            var database = mongoClient.GetDatabase("Election");
             Table4Collection = database.GetCollection<ScoreArea>("Table4");
             FinalTable4Collection = database.GetCollection<ScoreArea>("FinalTable4");
             Table2Collection = database.GetCollection<ScoreArea>("Table2");
@@ -78,6 +78,13 @@ namespace Election.Api.Controllers
         public List<ScoreArea> GetAreaWithIdArea(string idArea)
         {
             var getData = Table4Collection.Find(it => it.IdArea == idArea.ToUpper()).ToList();
+            return getData;
+        }
+
+        [HttpGet("{idArea}")]
+        public List<ScoreArea> GetAreaWithIdAreaTable2(string idArea)
+        {
+            var getData = Table2Collection.Find(it => it.IdArea == idArea.ToUpper()).ToList();
             return getData;
         }
 
@@ -565,7 +572,7 @@ namespace Election.Api.Controllers
                 var dataGroupByArea = dataRegion.OrderBy(it => it.IdArea).GroupBy(it => it.IdArea).ToList();
                 foreach (var data in dataGroupByArea)
                 {
-                    var getArea = data.FirstOrDefault();
+                    var getArea = data.FirstOrDefault(it => it.IdParty == "034");
                     listArea.Add(getArea);
                 }
             }
@@ -585,19 +592,24 @@ namespace Election.Api.Controllers
         public async Task UpdateTable2()
         {
             var getData = Table4Collection.Find(it => true).ToList();
-            var dataTable2 = Table2Collection.Find(it => true).ToList();
-            foreach (var data in dataTable2)
+            var dataTable2 = Table2Collection.Find(it => true).ToList()
+            .GroupBy(it => it.IdArea).ToList();
+            if (dataTable2 != null)
             {
-                Table2Collection.DeleteOne(it => it.IdArea == data.IdArea && it.Id == data.Id);
+                foreach (var data in dataTable2)
+                {
+                    Table2Collection.DeleteMany(it => it.IdArea == data.Key);
+                }
             }
+            // Problem can't insert
             for (int i = 0; i < getData.Count; i += AtATime)
             {
                 var list = getData.Skip(i).Take(AtATime);
                 Table2Collection.InsertMany(list);
                 await Task.Delay(Delay);
             }
-            //Table2Collection.DeleteMany(it => true);
-            //Table2Collection.InsertMany(getData);
+            // Table2Collection.DeleteMany(it => true);
+            // Table2Collection.InsertMany(getData);
 
         }
 
