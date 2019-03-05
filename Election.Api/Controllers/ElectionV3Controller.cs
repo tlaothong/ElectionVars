@@ -36,7 +36,7 @@ namespace Election.Api.Controllers
             };
             var mongoClient = new MongoClient(settings);
             // mlab
-            //var database = mongoClient.GetDatabase("electionmana");
+            // var database = mongoClient.GetDatabase("electionmana");
             // Azure
             var database = mongoClient.GetDatabase("Election");
             Table4Collection = database.GetCollection<ScoreArea>("Table4");
@@ -455,7 +455,7 @@ namespace Election.Api.Controllers
             {
                 var totalScoreParty = data.Sum(it => it.Score);
                 var scoreWithArea = listPartyWin.Count(it => it.IdParty == data.Key);
-                var statusAlly = dataScoreParty.FirstOrDefault(it => it.IdParty == data.Key)?.StatusAllies;
+                var statusAlly = dataScoreParty.FirstOrDefault(it => it.IdParty == data.Key).StatusAllies;
                 listParty.Add(new PartyList
                 {
                     Id = Guid.NewGuid().ToString(),
