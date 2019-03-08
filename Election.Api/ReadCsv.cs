@@ -246,7 +246,7 @@ public class ReadCsv
     {
         // var FilePath = @"FinalTable2.csv";
         // Table2
-        var FilePath = @"Table2.csv";
+        var FilePath = @"Template.csv";
         var listScoreArea = new List<ScoreArea>();
         using (var reader = new StreamReader(FilePath))
         {
@@ -282,5 +282,45 @@ public class ReadCsv
             }
         }
         return listScoreArea;
+    }
+
+    public List<ScorePollCsv> MockPrototypeDataTable2x()
+    {
+        // var FilePath = @"FinalTable2.csv";
+        // Table2
+        var FilePath = @"Template.csv";
+        var listScoreCsv = new List<ScorePollCsv>();
+        using (var csvReader = new StreamReader(FilePath))
+        {
+            while (!csvReader.EndOfStream)
+            {
+                var getFormCsv = csvReader.ReadLine();
+                var getLine = getFormCsv.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                foreach (var item in getLine)
+                {
+                    var getData = item.Split(',').ToList();
+                    if (getData[0] != "รหัสพรรค" && getData[1] != "ชื่อเขต" &&
+                    getData[2] != "รหัสเขต " && getData[3] != "ชื่อพรรค" && getData[4] != "เปอร์เซ็น/คะแนน"
+                    && getData[5] != "ภูมิภาค" && getData[6] != "รหัสภูมิภาค" && getData[4] != "")
+                    {
+                        float.TryParse(getData[4], out float score);
+                        listScoreCsv.Add(new ScorePollCsv
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            IdParty = getData[0],
+                            NameParty = getData[3],
+                            IdArea = getData[2],
+                            NameArea = getData[1],
+                            Score = score,
+                            Region = getData[5],
+                            IdRegion = getData[6],
+                            
+                        });
+                    }
+                }
+            }
+        
+    }
+        return listScoreCsv;
     }
 }
