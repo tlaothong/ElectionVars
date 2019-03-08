@@ -223,19 +223,39 @@ namespace Election.Api.Controllers
             {
                 var getWinnerArea = item.FirstOrDefault(it => it.Score == item.Max(i => i.Score));
                 var getMyParty = item.FirstOrDefault(it => it.IdParty == "034");
-                listScore.Add(new MyParty
+                if (getMyParty != null)
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    IdArea = item.Key,
-                    NameArea = getMyParty.NameArea,
-                    PartyWin = getWinnerArea.NameParty,
-                    scoreMax = getWinnerArea.Score,
-                    scoreMyParty = getMyParty.Score,
-                    StatusAreaEdit = getMyParty.StatusAreaEdit,
-                    Region = getMyParty.Region,
-                    IdRegion = getMyParty.IdRegion
-                });
+                    listScore.Add(new MyParty
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        IdArea = item.Key,
+                        NameArea = getWinnerArea.NameArea,
+                        PartyWin = getWinnerArea.NameParty,
+                        scoreMax = getWinnerArea.Score,
+                        scoreMyParty = getMyParty.Score,
+                        StatusAreaEdit = getWinnerArea.StatusAreaEdit,
+                        Region = getWinnerArea.Region,
+                        IdRegion = getWinnerArea.IdRegion
+                    });
+                }
+                else
+                {
+                    listScore.Add(new MyParty
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        IdArea = item.Key,
+                        NameArea = getWinnerArea.NameArea,
+                        PartyWin = getWinnerArea.NameParty,
+                        scoreMax = getWinnerArea.Score,
+                        scoreMyParty = 0,
+                        StatusAreaEdit = getWinnerArea.StatusAreaEdit,
+                        Region = getWinnerArea.Region,
+                        IdRegion = getWinnerArea.IdRegion
+                    });
+                }
+
             }
+
             var dataGroupByRegion = listScore.OrderBy(it => it.IdRegion).GroupBy(it => it.IdRegion).ToList();
             var sortData = new List<MyParty>();
             foreach (var dataRegion in dataGroupByRegion)
@@ -300,7 +320,7 @@ namespace Election.Api.Controllers
                         if (getData[0] != "รหัสพรรค" && getData[1] != "ชื่อเขต" &&
                         getData[2] != "รหัสเขต " && getData[3] != "ชื่อพรรค" && getData[4] != "เปอร์เซ็น/คะแนน"
                         && getData[5] != "ภูมิภาค" && getData[6] != "รหัสภูมิภาค")
-                         //&& getData[4] != ""
+                        //&& getData[4] != ""
                         {
                             float.TryParse(getData[4], out float score);
                             listScoreCsv.Add(new ScorePollCsv
@@ -519,7 +539,6 @@ namespace Election.Api.Controllers
                 }
             }
             //Hack: move to upload process
-
             listPartyFinal.AddRange(listParty);
             //FinalPartyScoreCollection.DeleteMany(it => true);
             //FinalPartyScoreCollection.InsertMany(listPartyFinal);
@@ -530,7 +549,7 @@ namespace Election.Api.Controllers
             {
                 foreach (var finalPartyScore in finalPartyScores)
                 {
-                    await FinalPartyScoreCollection.DeleteOneAsync(it => it.Id == finalPartyScore.Id && it.IdParty == finalPartyScore.IdParty);
+                    await FinalPartyScoreCollection.DeleteOneAsync(it => it.Id == finalPartyScore.Id);
                 }
                 var sortData = listPartyFinal.OrderByDescending(it => it.PercentScore).ToList();
                 foreach (var data in sortData)
@@ -555,12 +574,6 @@ namespace Election.Api.Controllers
                     await Task.Delay(Delay);
                 }
             }
-           
-            //}
-            //else
-            //{
-            //}
-            //FinalPartyScoreCollection.InsertMany(sortData);
         }
 
         [HttpPost("{id}/{statusAllies}")]
