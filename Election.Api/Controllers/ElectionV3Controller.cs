@@ -28,13 +28,13 @@ namespace Election.Api.Controllers
 
         public ElectionV3Controller()
         {
-            //var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://guntza22:guntza220938@ds026558.mlab.com:26558/electionmana"));
-            var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://thes:zk70NWOArstd28WKZzMzecE0qF9fYD8TD89SMkLt9jbRuaCSFyNDBkP1lS2SbxVbDXvtzTuuKHphEZS5fBDifg==@thes.documents.azure.com:10255/Election?ssl=true&replicaSet=globaldb"));
+            var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://guntza22:guntza220938@ds026558.mlab.com:26558/electionmana"));
+            // var settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://thes:zk70NWOArstd28WKZzMzecE0qF9fYD8TD89SMkLt9jbRuaCSFyNDBkP1lS2SbxVbDXvtzTuuKHphEZS5fBDifg==@thes.documents.azure.com:10255/Election?ssl=true&replicaSet=globaldb"));
             var mongoClient = new MongoClient(settings);
             // mlab
-            //var database = mongoClient.GetDatabase("electionmana");
+            var database = mongoClient.GetDatabase("electionmana");
             // Azure
-            var database = mongoClient.GetDatabase("Election");
+            // var database = mongoClient.GetDatabase("Election");
             settings.SslSettings = new SslSettings()
             {
                 EnabledSslProtocols = SslProtocols.Tls12
@@ -456,15 +456,16 @@ namespace Election.Api.Controllers
             //             Table2Collection.DeleteMany(it => it.IdArea == data.Key);
             //         }
             //     }
-            var dataTable4Update = Table4Collection.Find(it => true).ToList()
-            .GroupBy(it => it.IdArea).ToList();
-            if (dataTable4Update != null)
+            // var dataTable4Update = Table4Collection.Find(it => true).ToList()
+            // .GroupBy(it => it.IdArea).ToList();
+            var dataTable4GroupByArea = getTable4.GroupBy(it => it.IdArea).ToList();
+            // if (dataTable4GroupByArea != null)
+            // {
+            foreach (var data in dataTable4GroupByArea)
             {
-                foreach (var data in dataTable4Update)
-                {
-                    Table4Collection.DeleteMany(it => it.IdArea == data.Key);
-                }
+                Table4Collection.DeleteMany(it => it.IdArea == data.Key);
             }
+            // }
 
             for (int i = 0; i < listTable4.Count; i += AtATime)
             {
