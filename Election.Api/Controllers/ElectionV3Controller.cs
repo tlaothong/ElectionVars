@@ -91,21 +91,25 @@ namespace Election.Api.Controllers
         [HttpPost("{idArea}")]
         public void SetTags([FromBody]TextTag newTag, string idArea)
         {
-            var getDataTable4 = Table4Collection.Find(it => it.IdParty == "034" && it.IdArea == idArea.ToUpper()).FirstOrDefault();
+            //var getDataTable4 = Table4Collection.Find(it => it.IdParty == "034" && it.IdArea == idArea.ToUpper()).FirstOrDefault();
+            var getDataTable4 = Table4Collection.Find(it => it.IdArea == idArea.ToUpper()).ToList();
             var listTags = newTag.Text.Split('#').Distinct().ToList();
             // getDataTable4.Tags.RemoveAll(it => it != "ชนะ" || it != "แพ้");
-            if (getDataTable4.Tags != null)
+            foreach (var dataTable4 in getDataTable4)
             {
-                getDataTable4.Tags.RemoveAll(it => true);
+                if (dataTable4.Tags != null)
+                {
+                    dataTable4.Tags.RemoveAll(it => true);
+                }
+                dataTable4.Tags.AddRange(listTags);
+                Table4Collection.ReplaceOne(it => it.IdArea == dataTable4.IdArea && it.Id == dataTable4.Id, dataTable4);
             }
-            getDataTable4.Tags.AddRange(listTags);
-            Table4Collection.ReplaceOne(it => it.IdArea == getDataTable4.IdArea && it.Id == getDataTable4.Id, getDataTable4);
         }
 
         [HttpGet("{idArea}")]
         public TextTag GetTagArea(string idArea)
         {
-            var tagDataTable4 = Table4Collection.Find(it => it.IdArea == idArea.ToUpper() && it.IdParty == "034").FirstOrDefault();
+            var tagDataTable4 = Table4Collection.Find(it => it.IdArea == idArea.ToUpper()).FirstOrDefault();
             var tags = new TextTag();
             // tagDataTable4.Tags.RemoveAll(it => it == "ชนะ" || it == "แพ้");
             if (tagDataTable4 != null)
@@ -163,21 +167,27 @@ namespace Election.Api.Controllers
             // Table4Collection.InsertOne(getParty);
             Table4Collection.ReplaceOne(it => it.IdArea == getParty.IdArea && it.Id == getParty.Id, getParty);
             //set status Area Edit
-            var getDataUpdate = Table4Collection.Find(it => true).ToList();
-            var groupByArea = getDataUpdate.GroupBy(it => it.IdArea).ToList();
-            foreach (var item in groupByArea)
+            var getDataByArea = Table4Collection.Find(it => it.IdArea == getParty.IdArea).ToList();
+            foreach (var data in getDataByArea)
             {
-                if (item.Key == getParty.IdArea)
-                {
-                    foreach (var datas in item)
-                    {
-                        datas.StatusAreaEdit = true;
-                        // Table4Collection.DeleteOne(it => it.Id == datas.Id);
-                        // Table4Collection.InsertOne(datas);
-                        Table4Collection.ReplaceOne(it => it.IdArea == datas.IdArea && it.Id == datas.Id, datas);
-                    }
-                }
+                data.StatusAreaEdit = true;
+                Table4Collection.ReplaceOne(it => it.IdArea == data.IdArea && it.Id == data.Id, data);
             }
+            // var getDataUpdate = Table4Collection.Find(it => true).ToList();
+            // var groupByArea = getDataUpdate.GroupBy(it => it.IdArea).ToList();
+            // foreach (var item in groupByArea)
+            // {
+            //     if (item.Key == getParty.IdArea)
+            //     {
+            //         foreach (var datas in item)
+            //         {
+            //             datas.StatusAreaEdit = true;
+            //             // Table4Collection.DeleteOne(it => it.Id == datas.Id);
+            //             // Table4Collection.InsertOne(datas);
+            //             Table4Collection.ReplaceOne(it => it.IdArea == datas.IdArea && it.Id == datas.Id, datas);
+            //         }
+            //     }
+            // }
         }
 
         [HttpGet]
@@ -469,7 +479,7 @@ namespace Election.Api.Controllers
         public async Task UpdatePartyScore()
         {
             var dataScoreArea = Table4Collection.Find(it => true).ToList();
-            var dataScoreParty = FinalPartyScoreCollection.Find(it => true).ToList();
+            //var dataScoreParty = FinalPartyScoreCollection.Find(it => true).ToList();
             var totalScore = dataScoreArea.Sum(it => it.Score);
             var totalSS = 500.0;
             var ratio = Convert.ToInt32(totalScore / totalSS);
@@ -489,42 +499,42 @@ namespace Election.Api.Controllers
             {
                 var totalScoreParty = data.Sum(it => it.Score);
                 var scoreWithArea = listPartyWin.Count(it => it.IdParty == data.Key);
-                var statusAlly = dataScoreParty.FirstOrDefault(it => it.IdParty == data.Key).StatusAllies;
-
-                if (statusAlly != null)
+                //var dataScoreParty2 = dataScoreParty.FirstOrDefault(it => it.IdParty == data.Key);
+                //statusAlly
+                // if (dataScoreParty2.StatusAllies.Any())
+                // {
+                listParty.Add(new PartyList
                 {
-                    listParty.Add(new PartyList
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        IdParty = data.Key,
-                        PartyName = data.FirstOrDefault().NameParty,
-                        NameInitial = data.FirstOrDefault().NameInitial,
-                        TotalScore = totalScoreParty,
-                        HaveScoreDigit = totalScoreParty / ratio,
-                        HaveScore = Math.Round(totalScoreParty / ratio),
-                        AreaScore = scoreWithArea,
-                        NameListScore = Math.Round(totalScoreParty / ratio) - scoreWithArea,
-                        PercentScore = Math.Round(totalScoreParty / ratio) * 100 / totalSS,
-                        StatusAllies = statusAlly
+                    Id = Guid.NewGuid().ToString(),
+                    IdParty = data.Key,
+                    PartyName = data.FirstOrDefault().NameParty,
+                    NameInitial = data.FirstOrDefault().NameInitial,
+                    TotalScore = totalScoreParty,
+                    HaveScoreDigit = totalScoreParty / ratio,
+                    HaveScore = Math.Round(totalScoreParty / ratio),
+                    AreaScore = scoreWithArea,
+                    NameListScore = Math.Round(totalScoreParty / ratio) - scoreWithArea,
+                    PercentScore = Math.Round(totalScoreParty / ratio) * 100 / totalSS,
+                    // StatusAllies = statusAlly
 
-                    });
-                }
-                else
-                {
-                    listParty.Add(new PartyList
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        IdParty = data.Key,
-                        PartyName = data.FirstOrDefault().NameParty,
-                        NameInitial = data.FirstOrDefault().NameInitial,
-                        TotalScore = totalScoreParty,
-                        HaveScoreDigit = totalScoreParty / ratio,
-                        HaveScore = Math.Round(totalScoreParty / ratio),
-                        AreaScore = scoreWithArea,
-                        NameListScore = Math.Round(totalScoreParty / ratio) - scoreWithArea,
-                        PercentScore = Math.Round(totalScoreParty / ratio) * 100 / totalSS
-                    });
-                }
+                });
+                // }
+                // else
+                // {
+                //     listParty.Add(new PartyList
+                //     {
+                //         Id = Guid.NewGuid().ToString(),
+                //         IdParty = data.Key,
+                //         PartyName = data.FirstOrDefault().NameParty,
+                //         NameInitial = data.FirstOrDefault().NameInitial,
+                //         TotalScore = totalScoreParty,
+                //         HaveScoreDigit = totalScoreParty / ratio,
+                //         HaveScore = Math.Round(totalScoreParty / ratio),
+                //         AreaScore = scoreWithArea,
+                //         NameListScore = Math.Round(totalScoreParty / ratio) - scoreWithArea,
+                //         PercentScore = Math.Round(totalScoreParty / ratio) * 100 / totalSS
+                //     });
+                // }
             }
             while (listParty.Sum(it => it.HaveScore) < totalSS || listParty.Any(it => it.HaveScore < it.AreaScore))
             {
@@ -577,11 +587,17 @@ namespace Election.Api.Controllers
 
             if (finalPartyScores.Any())
             {
+                var sortData = listPartyFinal.OrderByDescending(it => it.PercentScore).ToList();
+                foreach (var data in sortData)
+                {
+                    var statusAllies = finalPartyScores.FirstOrDefault(it => it.IdParty == data.IdParty).StatusAllies;
+                    data.StatusAllies = statusAllies;
+                }
                 foreach (var finalPartyScore in finalPartyScores)
                 {
                     await FinalPartyScoreCollection.DeleteOneAsync(it => it.Id == finalPartyScore.Id);
                 }
-                var sortData = listPartyFinal.OrderByDescending(it => it.PercentScore).ToList();
+
                 // foreach (var data in sortData)
                 // {
                 //     var statusAllies = finalPartyScores.FirstOrDefault(it => it.IdParty == data.IdParty).StatusAllies;
@@ -597,6 +613,10 @@ namespace Election.Api.Controllers
             else
             {
                 var sortData = listPartyFinal.OrderByDescending(it => it.PercentScore).ToList();
+                foreach (var data in sortData)
+                {
+                    data.StatusAllies = "";
+                }
                 for (int i = 0; i < sortData.Count; i += AtATime)
                 {
                     var list = sortData.Skip(i).Take(AtATime);
@@ -662,7 +682,7 @@ namespace Election.Api.Controllers
                 var dataGroupByArea = dataRegion.OrderBy(it => it.IdArea).GroupBy(it => it.IdArea).ToList();
                 foreach (var data in dataGroupByArea)
                 {
-                    var getArea = data.FirstOrDefault(it => it.IdParty == "034");
+                    var getArea = data.FirstOrDefault();
                     listArea.Add(getArea);
                 }
             }
@@ -684,7 +704,7 @@ namespace Election.Api.Controllers
             var getData = Table4Collection.Find(it => true).ToList();
             var dataTable2 = Table2Collection.Find(it => true).ToList()
             .GroupBy(it => it.IdArea).ToList();
-            if (dataTable2 != null)
+            if (dataTable2.Any())
             {
                 foreach (var data in dataTable2)
                 {
@@ -706,7 +726,7 @@ namespace Election.Api.Controllers
         [HttpGet("{getTag}")]
         public List<ScoreArea> GetAreaWithTagTable2(string getTag)
         {
-            var getData = Table2Collection.Find(it => it.IdParty == "034" && it.Tags.Any(i => i == getTag)).ToList();
+            var getData = Table2Collection.Find(it => it.Tags.Any(i => i == getTag)).ToList();
             return getData;
             // var getData = Table2Collection.Find(it => it.IdParty == "034" && it.Tags.Any(i => i == getTag)).ToList()
             // .OrderBy(it => it.IdRegion)
@@ -717,7 +737,7 @@ namespace Election.Api.Controllers
         [HttpGet]
         public List<string> GetAllTagTable2()
         {
-            var getDataTag = Table2Collection.Find(it => it.IdParty == "034").ToList();
+            var getDataTag = Table2Collection.Find(it => true).ToList();
             var listTag = new List<string>();
             foreach (var data in getDataTag)
             {
