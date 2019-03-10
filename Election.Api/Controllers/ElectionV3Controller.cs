@@ -787,29 +787,7 @@ namespace Election.Api.Controllers
             //App1PartyScoreCollection.DeleteMany(it => true);
             //App1PartyScoreCollection.InsertMany(getDataScorePartyFormApp2);
         }
-        //Mock Final Table4
-        [HttpPost]
-        // public void MockFinalTable4()
-        public async Task MockFinalTable4()
-        {
-            var csvReader = new ReadCsv();
-            var listDataTable4FromCsv = csvReader.MockPrototypeDataTable2().OrderBy(it => it.IdArea).ToList();
-            var dataFinalTAble4 = FinalTable4Collection.Find(it => true).ToList();
-            // foreach (var data in dataFinalTAble4)
-            // {
-            //     FinalTable4Collection.DeleteOne(it => it.Id == data.Id);
-            // }
-            // const int AtATime = 100;
-            // const int Delay = 700;
-            // for (int i = 0; i < listDataTable4FromCsv.Count; i += AtATime)
-            // {
-            //     var list = listDataTable4FromCsv.Skip(i).Take(AtATime);
-            //     FinalTable4Collection.InsertMany(list);
-            //     await Task.Delay(Delay);
-            // }
-            FinalTable4Collection.DeleteMany(it => true);
-            FinalTable4Collection.InsertMany(listDataTable4FromCsv);
-        }
+       
         [HttpGet]
         public List<ScoreArea> GetFinalTable4()
         {
