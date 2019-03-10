@@ -91,10 +91,8 @@ namespace Election.Api.Controllers
         [HttpPost("{idArea}")]
         public void SetTags([FromBody]TextTag newTag, string idArea)
         {
-            //var getDataTable4 = Table4Collection.Find(it => it.IdParty == "034" && it.IdArea == idArea.ToUpper()).FirstOrDefault();
             var getDataTable4 = Table4Collection.Find(it => it.IdArea == idArea.ToUpper()).ToList();
             var listTags = newTag.Text.Split('#').Distinct().ToList();
-            // getDataTable4.Tags.RemoveAll(it => it != "ชนะ" || it != "แพ้");
             foreach (var dataTable4 in getDataTable4)
             {
                 if (dataTable4.Tags != null)
@@ -111,7 +109,6 @@ namespace Election.Api.Controllers
         {
             var tagDataTable4 = Table4Collection.Find(it => it.IdArea == idArea.ToUpper()).FirstOrDefault();
             var tags = new TextTag();
-            // tagDataTable4.Tags.RemoveAll(it => it == "ชนะ" || it == "แพ้");
             if (tagDataTable4 != null)
             {
                 tags.Text = string.Join("#", tagDataTable4.Tags);
@@ -120,7 +117,6 @@ namespace Election.Api.Controllers
             {
                 tags.Text = "";
             }
-
             return tags;
         }
 
@@ -173,21 +169,6 @@ namespace Election.Api.Controllers
                 data.StatusAreaEdit = true;
                 Table4Collection.ReplaceOne(it => it.IdArea == data.IdArea && it.Id == data.Id, data);
             }
-            // var getDataUpdate = Table4Collection.Find(it => true).ToList();
-            // var groupByArea = getDataUpdate.GroupBy(it => it.IdArea).ToList();
-            // foreach (var item in groupByArea)
-            // {
-            //     if (item.Key == getParty.IdArea)
-            //     {
-            //         foreach (var datas in item)
-            //         {
-            //             datas.StatusAreaEdit = true;
-            //             // Table4Collection.DeleteOne(it => it.Id == datas.Id);
-            //             // Table4Collection.InsertOne(datas);
-            //             Table4Collection.ReplaceOne(it => it.IdArea == datas.IdArea && it.Id == datas.Id, datas);
-            //         }
-            //     }
-            // }
         }
 
         [HttpGet]
@@ -206,16 +187,12 @@ namespace Election.Api.Controllers
                     listArea.Add(getArea);
                 }
             }
-
-            // var sortData = listArea.OrderBy(it => it.IdRegion).OrderBy(it => it.IdArea).ToList();
             return listArea;
         }
 
         [HttpGet("{idParty}")]
         public List<ScoreArea> GetAreaWinScoreParty(string idParty)
         {
-            // var getData = Table4Collection.Find(it => it.IdParty == idParty).ToList()
-            // .Where(it => it.Tags.Any(i => i == "ชนะ")).ToList();
             var getData = Table4Collection.Find(it => true).ToList().GroupBy(it => it.IdArea).ToList();
             var listWinParty = new List<ScoreArea>();
             foreach (var data in getData)
@@ -309,10 +286,6 @@ namespace Election.Api.Controllers
             var csvReader = new ReadCsv();
             var listTable2 = csvReader.MockPrototypeDataTable2();
             var dataTable4 = Table4Collection.Find(it => true).ToList();
-            //foreach (var data in dataTable4)
-            //{
-            //    Table4Collection.DeleteOne(it => it.Id == data.Id);
-            //}
             for (int i = 0; i < listTable2.Count; i += AtATime)
             {
                 var list = listTable2.Skip(i).Take(AtATime);
@@ -404,13 +377,10 @@ namespace Election.Api.Controllers
                 }
             }
             //FinalScorePollCollection.InsertMany(listScorePoll);
-
-
             for (int i = 0; i < listScorePoll.Count; i += AtATime)
             {
                 var list = listScorePoll.Skip(i).Take(AtATime);
-                FinalScorePollCollection.InsertMany(list);
-                //FinalScorePollCollection.BulkWrite(new WriteModel<ScorePollV2>{new InsertOneModel<ScorePollV2>(list.FirstOrDefault())},  new BulkWriteOptions() { IsOrdered = false });               
+                FinalScorePollCollection.InsertMany(list);     
                 await Task.Delay(Delay);
             }
             //update Score Table 4
@@ -444,28 +414,13 @@ namespace Election.Api.Controllers
             }
             //Table4Collection.DeleteMany(it => true);
             //Table4Collection.InsertMany(listTable4);
-
-            // var idAreas = getTable4.GroupBy(it => it.IdArea).Select(x => x.First()).Select(it => it.IdArea).ToArray();
-
-            //   var dataTable2 = Table2Collection.Find(it => true).ToList()
-            //     .GroupBy(it => it.IdArea).ToList();
-            //     if (dataTable2 != null)
-            //     {
-            //         foreach (var data in dataTable2)
-            //         {
-            //             Table2Collection.DeleteMany(it => it.IdArea == data.Key);
-            //         }
-            //     }
-            // var dataTable4Update = Table4Collection.Find(it => true).ToList()
-            // .GroupBy(it => it.IdArea).ToList();
             var dataTable4GroupByArea = getTable4.GroupBy(it => it.IdArea).ToList();
-            // if (dataTable4GroupByArea != null)
-            // {
+           
             foreach (var data in dataTable4GroupByArea)
             {
                 Table4Collection.DeleteMany(it => it.IdArea == data.Key);
             }
-            // }
+          
 
             for (int i = 0; i < listTable4.Count; i += AtATime)
             {
@@ -479,8 +434,7 @@ namespace Election.Api.Controllers
         // public void UpdatePartyScore()
         public async Task UpdatePartyScore()
         {
-            var dataScoreArea = Table4Collection.Find(it => true).ToList();
-            //var dataScoreParty = FinalPartyScoreCollection.Find(it => true).ToList();
+            var dataScoreArea = Table4Collection.Find(it => true).ToList();  
             var totalScore = dataScoreArea.Sum(it => it.Score);
             var totalSS = 500.0;
             var ratio = Convert.ToInt32(totalScore / totalSS);
@@ -500,10 +454,6 @@ namespace Election.Api.Controllers
             {
                 var totalScoreParty = data.Sum(it => it.Score);
                 var scoreWithArea = listPartyWin.Count(it => it.IdParty == data.Key);
-                //var dataScoreParty2 = dataScoreParty.FirstOrDefault(it => it.IdParty == data.Key);
-                //statusAlly
-                // if (dataScoreParty2.StatusAllies.Any())
-                // {
                 listParty.Add(new PartyList
                 {
                     Id = Guid.NewGuid().ToString(),
@@ -515,27 +465,8 @@ namespace Election.Api.Controllers
                     HaveScore = Math.Round(totalScoreParty / ratio),
                     AreaScore = scoreWithArea,
                     NameListScore = Math.Round(totalScoreParty / ratio) - scoreWithArea,
-                    PercentScore = Math.Round(totalScoreParty / ratio) * 100 / totalSS,
-                    // StatusAllies = statusAlly
-
+                    PercentScore = Math.Round(totalScoreParty / ratio) * 100 / totalSS
                 });
-                // }
-                // else
-                // {
-                //     listParty.Add(new PartyList
-                //     {
-                //         Id = Guid.NewGuid().ToString(),
-                //         IdParty = data.Key,
-                //         PartyName = data.FirstOrDefault().NameParty,
-                //         NameInitial = data.FirstOrDefault().NameInitial,
-                //         TotalScore = totalScoreParty,
-                //         HaveScoreDigit = totalScoreParty / ratio,
-                //         HaveScore = Math.Round(totalScoreParty / ratio),
-                //         AreaScore = scoreWithArea,
-                //         NameListScore = Math.Round(totalScoreParty / ratio) - scoreWithArea,
-                //         PercentScore = Math.Round(totalScoreParty / ratio) * 100 / totalSS
-                //     });
-                // }
             }
             while (listParty.Sum(it => it.HaveScore) < totalSS || listParty.Any(it => it.HaveScore < it.AreaScore))
             {
@@ -583,7 +514,6 @@ namespace Election.Api.Controllers
             listPartyFinal.AddRange(listParty);
             //FinalPartyScoreCollection.DeleteMany(it => true);
             //FinalPartyScoreCollection.InsertMany(listPartyFinal);
-
             var finalPartyScores = FinalPartyScoreCollection.Find(it => true).ToList();
 
             if (finalPartyScores.Any())
@@ -598,12 +528,6 @@ namespace Election.Api.Controllers
                 {
                     await FinalPartyScoreCollection.DeleteOneAsync(it => it.Id == finalPartyScore.Id);
                 }
-
-                // foreach (var data in sortData)
-                // {
-                //     var statusAllies = finalPartyScores.FirstOrDefault(it => it.IdParty == data.IdParty).StatusAllies;
-                //     data.StatusAllies = statusAllies;
-                // }
                 for (int i = 0; i < sortData.Count; i += AtATime)
                 {
                     var list = sortData.Skip(i).Take(AtATime);
@@ -687,7 +611,6 @@ namespace Election.Api.Controllers
                     listArea.Add(getArea);
                 }
             }
-            // var sortData = listArea.OrderBy(it => it.IdRegion).OrderBy(it => it.IdArea).ToList();
             return listArea;
         }
 
@@ -729,10 +652,6 @@ namespace Election.Api.Controllers
         {
             var getData = Table2Collection.Find(it => it.Tags.Any(i => i == getTag)).ToList();
             return getData;
-            // var getData = Table2Collection.Find(it => it.IdParty == "034" && it.Tags.Any(i => i == getTag)).ToList()
-            // .OrderBy(it => it.IdRegion)
-            // .OrderBy(it => it.IdArea).ToList();
-            // return getData;
         }
 
         [HttpGet]
@@ -744,7 +663,6 @@ namespace Election.Api.Controllers
             {
                 foreach (var tags in data.Tags)
                 {
-                    // if (tags != "ชนะ" && tags != "แพ้" && tags != "")
                     if (tags != "" && data.Tags.Any(i => i != tags))
                     {
                         listTag.Add(tags);
@@ -797,73 +715,4 @@ namespace Election.Api.Controllers
     }
 }
 
-
-//  var dataTable4 = Table4Collection.Find(it => true).ToList();
-// foreach (var data in dataTable4)
-// {
-//     Table4Collection.DeleteOne(it => it.Id == data.Id);
-// }
-// const int AtATime = 100;
-// const int Delay = 700;
-// for (int i = 0; i < listTable2.Count; i += AtATime)
-// {
-//     var list = listTable2.Skip(i).Take(AtATime);
-//     Table4Collection.InsertMany(list);
-//     await Task.Delay(Delay);
-// }
-
-// set tag
-// var getDataUpdate2 = Table4Collection.Find(it => true).ToList();
-// var groupByArea2 = getDataUpdate2.GroupBy(it => it.IdArea).ToList();
-// var listUpdate = new List<ScoreArea>();
-// foreach (var item in groupByArea2)
-// {
-//     var maxScore = item.Max(it => it.Score);
-//     foreach (var data in item)
-//     {
-//         if (data.Score == maxScore)
-//         {
-//             if (data.Tags.Any(i => i != "ชนะ"))
-//             {
-//                 data.Tags.Remove("แพ้");
-//                 data.Tags.Add("ชนะ");
-//                 listUpdate.Add(data);
-//             }
-//             else
-//             {
-//                 listUpdate.Add(data);
-//             }
-//         }
-//         else
-//         {
-//             if (data.Tags.Any(i => i == "ชนะ"))
-//             {
-//                 data.Tags.Remove("ชนะ");
-//                 data.Tags.Add("แพ้");
-//                 listUpdate.Add(data);
-//             }
-//             else
-//             {
-//                 listUpdate.Add(data);
-//             }
-//         }
-//     }
-// }
-// Table4Collection.DeleteMany(it => true);
-// Table4Collection.InsertMany(listUpdate);
-
-// var listParty = dataScoreArea.GroupBy(it => it.IdParty)
-// .Select(it => new PartyList
-// {
-//     Id = Guid.NewGuid().ToString(),
-//     IdParty = it.Key,
-//     PartyName = it.FirstOrDefault().NameParty,
-//     NameInitial = it.FirstOrDefault().NameInitial,
-//     TotalScore = it.Sum(i => i.Score),
-//     HaveScoreDigit = it.Sum(i => i.Score) / ratio,
-//     HaveScore = Math.Round(it.Sum(i => i.Score) / ratio),
-//     AreaScore = it.Count(i => i.Tags.Any(x => x == "ชนะ")),
-//     NameListScore = Math.Round(it.Sum(i => i.Score) / ratio) - it.Count(i => i.Tags.Any(x => x == "ชนะ")),
-//     PercentScore = Math.Round(it.Sum(i => i.Score) / ratio) * 100 / totalSS
-// }).ToList();
 
