@@ -244,8 +244,6 @@ public class ReadCsv
 
     public List<ScoreArea> MockPrototypeDataTable2()
     {
-        // var FilePath = @"FinalTable2.csv";
-        // Table2
         var FilePath = @"Template2.csv";
         var listScoreArea = new List<ScoreArea>();
         using (var reader = new StreamReader(FilePath))
