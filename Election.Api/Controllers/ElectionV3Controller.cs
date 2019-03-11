@@ -380,7 +380,7 @@ namespace Election.Api.Controllers
             for (int i = 0; i < listScorePoll.Count; i += AtATime)
             {
                 var list = listScorePoll.Skip(i).Take(AtATime);
-                FinalScorePollCollection.InsertMany(list);     
+                FinalScorePollCollection.InsertMany(list);
                 await Task.Delay(Delay);
             }
             //update Score Table 4
@@ -415,12 +415,12 @@ namespace Election.Api.Controllers
             //Table4Collection.DeleteMany(it => true);
             //Table4Collection.InsertMany(listTable4);
             var dataTable4GroupByArea = getTable4.GroupBy(it => it.IdArea).ToList();
-           
+
             foreach (var data in dataTable4GroupByArea)
             {
                 Table4Collection.DeleteMany(it => it.IdArea == data.Key);
             }
-          
+
 
             for (int i = 0; i < listTable4.Count; i += AtATime)
             {
@@ -434,7 +434,7 @@ namespace Election.Api.Controllers
         // public void UpdatePartyScore()
         public async Task UpdatePartyScore()
         {
-            var dataScoreArea = Table4Collection.Find(it => true).ToList();  
+            var dataScoreArea = Table4Collection.Find(it => true).ToList();
             var totalScore = dataScoreArea.Sum(it => it.Score);
             var totalSS = 500.0;
             var ratio = Convert.ToInt32(totalScore / totalSS);
@@ -692,9 +692,12 @@ namespace Election.Api.Controllers
         {
             var getDataScorePartyFormApp2 = FinalPartyScoreCollection.Find(it => true).ToList();
             var dataApp1PartyScore = App1PartyScoreCollection.Find(it => true).ToList();
-            foreach (var data in dataApp1PartyScore)
+            if (dataApp1PartyScore.Any())
             {
-                App1PartyScoreCollection.DeleteOne(it => it.Id == data.Id);
+                foreach (var data in dataApp1PartyScore)
+                {
+                    App1PartyScoreCollection.DeleteOne(it => it.Id == data.Id);
+                }
             }
             for (int i = 0; i < getDataScorePartyFormApp2.Count; i += AtATime)
             {
@@ -705,7 +708,7 @@ namespace Election.Api.Controllers
             //App1PartyScoreCollection.DeleteMany(it => true);
             //App1PartyScoreCollection.InsertMany(getDataScorePartyFormApp2);
         }
-       
+
         [HttpGet]
         public List<ScoreArea> GetFinalTable4()
         {
