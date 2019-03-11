@@ -20,9 +20,12 @@ namespace Election.Api
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseApplicationInsights()
-                .UseStartup<Startup>()
-                .UseIISIntegration();
-                // .UseStartup<Startup>().UseUrls("http://localhost:5000");
+             .UseApplicationInsights()
+                .UseStartup<Startup>().UseUrls("http://localhost:5000");
+
+        // .UseApplicationInsights()
+        // .UseStartup<Startup>()
+        // .UseIISIntegration();
+        // // .UseStartup<Startup>().UseUrls("http://localhost:5000");
     }
 }
