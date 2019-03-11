@@ -626,8 +626,7 @@ namespace Election.Api.Controllers
         public async Task UpdateTable2()
         {
             var getData = Table4Collection.Find(it => true).ToList();
-            var dataTable2 = Table2Collection.Find(it => true).ToList()
-            .GroupBy(it => it.IdArea).ToList();
+            var dataTable2 = Table2Collection.Find(it => true).ToList().GroupBy(it => it.IdArea).ToList();
             if (dataTable2.Any())
             {
                 foreach (var data in dataTable2)
