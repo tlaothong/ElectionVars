@@ -417,9 +417,9 @@ namespace Election.Api.Controllers
                 Table4Collection.DeleteMany(it => it.IdArea == data.Key);
             }
 
-            for (int i = 0; i < listT4.Count; i += AtATime)
+            for (int i = 0; i < listT4.Count; i += 600)
             {
-                var list = listT4.Skip(i).Take(AtATime);
+                var list = listT4.Skip(i).Take(600);
                 Table4Collection.InsertMany(list);
                 await Task.Delay(Delay);
             }
