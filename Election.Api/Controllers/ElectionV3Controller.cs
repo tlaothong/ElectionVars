@@ -21,6 +21,7 @@ namespace Election.Api.Controllers
         const int Delay = 1000;
 
         IMongoCollection<ScoreArea> Table4Collection { get; set; }
+        IMongoCollection<ScoreArea> DemoTable4Collection { get; set; }
         IMongoCollection<ScoreArea> FinalTable4Collection { get; set; }
         IMongoCollection<ScoreArea> Table2Collection { get; set; }
         IMongoCollection<ScorePollV2> FinalScorePollCollection { get; set; }
@@ -43,6 +44,7 @@ namespace Election.Api.Controllers
                 EnabledSslProtocols = SslProtocols.Tls12
             };
             Table4Collection = database.GetCollection<ScoreArea>("Table4");
+            DemoTable4Collection = database.GetCollection<ScoreArea>("DemoTable4");
             FinalTable4Collection = database.GetCollection<ScoreArea>("FinalTable4");
             Table2Collection = database.GetCollection<ScoreArea>("Table2");
             FinalScorePollCollection = database.GetCollection<ScorePollV2>("FinalScorePoll");
@@ -285,13 +287,35 @@ namespace Election.Api.Controllers
         }
         //===================================================== Api Upload File and UpdateData ==========================================
         [HttpPost]
-        public async Task MockTable2()
+        public async Task MockDemoTable4()
         {
             var csvReader = new ReadCsv();
             var listTable2 = csvReader.MockPrototypeDataTable2();
             for (int i = 0; i < listTable2.Count; i += AtATime)
             {
                 var list = listTable2.Skip(i).Take(AtATime);
+                DemoTable4Collection.InsertMany(list);
+                await Task.Delay(Delay);
+            }
+        }
+
+        [HttpPost]
+        public void DeleteTable4()
+        {
+            var dataTable4 = Table4Collection.Find(it => true).ToList();
+            foreach (var data in dataTable4.GroupBy(it => it.IdArea))
+            {
+                Table4Collection.DeleteMany(it => it.IdArea == data.Key);
+            }
+        }
+
+        [HttpPost]
+        public async Task MockTable4()
+        {
+            var dataDemoTable4 = DemoTable4Collection.Find(it => true).ToList();
+            for (int i = 0; i < dataDemoTable4.Count; i += AtATime)
+            {
+                var list = dataDemoTable4.Skip(i).Take(AtATime);
                 Table4Collection.InsertMany(list);
                 await Task.Delay(Delay);
             }
@@ -417,21 +441,11 @@ namespace Election.Api.Controllers
                 Table4Collection.DeleteMany(it => it.IdArea == data.Key);
             }
 
-            for (int i = 0; i < listT4.Count; i += 600)
+            for (int i = 0; i < listT4.Count; i += 550)
             {
-                var list = listT4.Skip(i).Take(600);
+                var list = listT4.Skip(i).Take(550);
                 Table4Collection.InsertMany(list);
                 await Task.Delay(Delay);
-            }
-        }
-
-        [HttpPost]
-        public void DeleteTable4()
-        {
-            var dataTable4 = Table4Collection.Find(it => true).ToList();
-            foreach (var data in dataTable4.GroupBy(it => it.IdArea))
-            {
-                Table4Collection.DeleteMany(it => it.IdArea == data.Key);
             }
         }
 
