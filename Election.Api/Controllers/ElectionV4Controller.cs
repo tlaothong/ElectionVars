@@ -28,7 +28,7 @@ namespace Election.Api.Controllers
         IMongoCollection<PartyList> FinalPartyScoreCollection { get; set; }
         IMongoCollection<PartyList> App1PartyScoreCollection { get; set; }
         IMongoCollection<ScorePollCsv> ScorePollCsvCollection { get; set; }
-        public static List<ScoreArea> listTable4 { get; set; }
+        public static List<ScoreArea> listT4 { get; set; }
 
         public ElectionV4Controller()
         {
@@ -409,7 +409,7 @@ namespace Election.Api.Controllers
             var dataScorePoll = FinalScorePollCollection.Find(it => true).ToList();
             var dataTable4 = Table4Collection.Find(it => true).ToList();
             var dataScorePollGroupByArea = dataScorePoll.GroupBy(it => it.IdArea).ToList();
-            var listT4 = new List<ScoreArea>();
+            listT4 = new List<ScoreArea>();
             foreach (var dataPoll in dataScorePollGroupByArea)
             {
                 var dataScorePollGroupByParty = dataPoll.GroupBy(it => it.IdParty).ToList();
@@ -441,12 +441,43 @@ namespace Election.Api.Controllers
                 Table4Collection.DeleteMany(it => it.IdArea == data.Key);
             }
 
-            for (int i = 0; i < listT4.Count; i += 550)
+            // for (int i = 0; i < listT4.Count; i += 550)
+            // {
+            //     var list = listT4.Skip(i).Take(550);
+            //     Table4Collection.InsertMany(list);
+            //     await Task.Delay(1000);
+            // }
+        }
+
+        [HttpPost]
+        public async Task FillDataIntoTable4_1()
+        {
+            var listTable4P1 = listT4.Skip(0).Take(listT4.Count / 2).ToList();
+            for (int i = 0; i < listTable4P1.Count; i += 550)
             {
-                var list = listT4.Skip(i).Take(550);
+                var list = listTable4P1.Skip(i).Take(550);
                 Table4Collection.InsertMany(list);
                 await Task.Delay(1000);
             }
+        }
+
+        [HttpPost]
+        public async Task FillDataIntoTable4_2()
+        {
+            var listTable4P2 = listT4.Skip(listT4.Count / 2).Take(6000).ToList();
+            for (int i = 0; i < listTable4P2.Count; i += 550)
+            {
+                var list = listTable4P2.Skip(i).Take(550);
+                Table4Collection.InsertMany(list);
+                await Task.Delay(1000);
+            }
+        }
+
+        [HttpGet]
+        public int GetCountOfTable4()
+        {
+            var count = Table4Collection.Find(it => true).ToList().Count;
+            return count;
         }
 
         [HttpPost]
