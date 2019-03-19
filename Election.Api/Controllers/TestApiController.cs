@@ -181,17 +181,17 @@ namespace Election.Api.Controllers
                         {
                             getMatchDataTable4.Tags = new List<string>();
                         }
-                        //listT4.Add(getMatchDataTable4);
-                        Table4Collection.ReplaceOne(it => it.IdArea == getMatchDataTable4.IdArea
-                        && it.IdParty == getMatchDataTable4.IdParty, getMatchDataTable4);
+                        listT4.Add(getMatchDataTable4);
+                        // Table4Collection.ReplaceOne(it => it.IdArea == getMatchDataTable4.IdArea
+                        // && it.IdParty == getMatchDataTable4.IdParty, getMatchDataTable4);
                     }
                 }
             }
 
-            // foreach (var data in dataTable4.GroupBy(it => it.IdArea))
-            // {
-            //     Table4Collection.DeleteMany(it => it.IdArea == data.Key);
-            // }
+            foreach (var data in dataTable4.GroupBy(it => it.IdArea))
+            {
+                Table4Collection.DeleteMany(it => it.IdArea == data.Key);
+            }
         }
 
         [HttpPost]
