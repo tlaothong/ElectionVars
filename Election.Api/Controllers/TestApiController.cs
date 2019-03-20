@@ -21,10 +21,11 @@ namespace Election.Api.Controllers
         const int Delay = 1000;
 
         IMongoCollection<ScoreArea> Table4Collection { get; set; }
+        IMongoCollection<ScoreArea> ListT4Collection { get; set; }
         IMongoCollection<ScoreArea> DemoTable4Collection { get; set; }
         IMongoCollection<ScorePollV2> FinalScorePollCollection { get; set; }
         IMongoCollection<PartyList> FinalPartyScoreCollection { get; set; }
-        public static List<ScoreArea> listT4 { get; set; }
+        //public static List<ScoreArea> listT4 { get; set; }
 
         public TestApiController()
         {
@@ -43,6 +44,7 @@ namespace Election.Api.Controllers
             DemoTable4Collection = database.GetCollection<ScoreArea>("DemoTable4");
             FinalScorePollCollection = database.GetCollection<ScorePollV2>("TestFinalScorePoll");
             FinalPartyScoreCollection = database.GetCollection<PartyList>("TestFinalPartyScore");
+            ListT4Collection = database.GetCollection<ScoreArea>("listT4");
         }
 
         [HttpPost]
@@ -159,7 +161,7 @@ namespace Election.Api.Controllers
             var dataScorePoll = FinalScorePollCollection.Find(it => true).ToList();
             var dataTable4 = Table4Collection.Find(it => true).ToList();
             var dataScorePollGroupByArea = dataScorePoll.GroupBy(it => it.IdArea).ToList();
-            listT4 = new List<ScoreArea>();
+            var listT4 = new List<ScoreArea>();
             foreach (var dataPoll in dataScorePollGroupByArea)
             {
                 var dataScorePollGroupByParty = dataPoll.GroupBy(it => it.IdParty).ToList();
@@ -188,6 +190,13 @@ namespace Election.Api.Controllers
                 }
             }
 
+            for (int i = 0; i < listT4.Count; i += 550)
+            {
+                var list = listT4.Skip(i).Take(550);
+                ListT4Collection.InsertMany(list);
+                await Task.Delay(1000);
+            }
+
             foreach (var data in dataTable4.GroupBy(it => it.IdArea))
             {
                 Table4Collection.DeleteMany(it => it.IdArea == data.Key);
@@ -208,24 +217,38 @@ namespace Election.Api.Controllers
         [HttpPost]
         public async Task FillDataIntoTable4_1()
         {
-            var listTable4P1 = listT4.Skip(0).Take(listT4.Count / 2).ToList();
+            var dataListT4 = ListT4Collection.Find(it => true).ToList();
+            var listTable4P1 = dataListT4.Skip(0).Take(dataListT4.Count / 2).ToList();
             for (int i = 0; i < listTable4P1.Count; i += 550)
             {
                 var list = listTable4P1.Skip(i).Take(550);
                 Table4Collection.InsertMany(list);
                 await Task.Delay(1000);
             }
+
+            foreach (var data in listTable4P1)
+            {
+                ListT4Collection.DeleteOne(it => it.IdArea == data.IdArea &&
+                it.IdParty == data.IdParty);
+            }
         }
 
         [HttpPost]
         public async Task FillDataIntoTable4_2()
         {
-            var listTable4P2 = listT4.Skip(listT4.Count / 2).Take(6000).ToList();
-            for (int i = 0; i < listTable4P2.Count; i += 550)
+            var dataListT4 = ListT4Collection.Find(it => true).ToList();
+            //var listTable4P2 = dataListT4.Skip(dataListT4.Count / 2).Take(6000).ToList();
+            for (int i = 0; i < dataListT4.Count; i += 550)
             {
-                var list = listTable4P2.Skip(i).Take(550);
+                var list = dataListT4.Skip(i).Take(550);
                 Table4Collection.InsertMany(list);
                 await Task.Delay(1000);
+            }
+
+            foreach (var data in dataListT4)
+            {
+                ListT4Collection.DeleteOne(it => it.IdArea == data.IdArea &&
+                it.IdParty == data.IdParty);
             }
         }
 
