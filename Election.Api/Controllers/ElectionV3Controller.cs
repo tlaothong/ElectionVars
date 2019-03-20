@@ -29,6 +29,7 @@ namespace Election.Api.Controllers
         IMongoCollection<PartyList> App1PartyScoreCollection { get; set; }
         IMongoCollection<ScorePollCsv> ScorePollCsvCollection { get; set; }
         public static List<ScoreArea> listTable4 { get; set; }
+        IMongoCollection<ScoreArea> ListT4Collection { get; set; }
 
         public ElectionV3Controller()
         {
@@ -51,6 +52,7 @@ namespace Election.Api.Controllers
             FinalPartyScoreCollection = database.GetCollection<PartyList>("FinalPartyScore");
             App1PartyScoreCollection = database.GetCollection<PartyList>("App1PartyScore");
             ScorePollCsvCollection = database.GetCollection<ScorePollCsv>("ScorePollCsv");
+            ListT4Collection = database.GetCollection<ScoreArea>("listT4");
         }
         // Api Score Poll =========================================================================
         [HttpGet]
@@ -436,21 +438,63 @@ namespace Election.Api.Controllers
                 }
             }
 
+            for (int i = 0; i < listT4.Count; i += 550)
+            {
+                var list = listT4.Skip(i).Take(550);
+                ListT4Collection.InsertMany(list);
+                await Task.Delay(1000);
+            }
+
             foreach (var data in dataTable4.GroupBy(it => it.IdArea))
             {
                 Table4Collection.DeleteMany(it => it.IdArea == data.Key);
             }
-
-            for (int i = 0; i < listT4.Count; i += 650)
-            {
-                var list = listT4.Skip(i).Take(650);
-                Table4Collection.InsertMany(list);
-                await Task.Delay(Delay);
-            }
         }
 
         [HttpPost]
-        // public void UpdatePartyScore()
+        public async Task FillDataIntoTable4_1()
+        {
+            var dataListT4 = ListT4Collection.Find(it => true).ToList();
+            var listTable4P1 = dataListT4.Skip(0).Take(dataListT4.Count / 2).ToList();
+            for (int i = 0; i < listTable4P1.Count; i += 550)
+            {
+                var list = listTable4P1.Skip(i).Take(550);
+                Table4Collection.InsertMany(list);
+                await Task.Delay(1000);
+            }
+
+            foreach (var data in listTable4P1)
+            {
+                ListT4Collection.DeleteOne(it => it.IdArea == data.IdArea &&
+                it.IdParty == data.IdParty);
+            }
+        }
+        [HttpPost]
+        public async Task FillDataIntoTable4_2()
+        {
+            var dataListT4 = ListT4Collection.Find(it => true).ToList();
+            for (int i = 0; i < dataListT4.Count; i += 550)
+            {
+                var list = dataListT4.Skip(i).Take(550);
+                Table4Collection.InsertMany(list);
+                await Task.Delay(1000);
+            }
+
+            foreach (var data in dataListT4)
+            {
+                ListT4Collection.DeleteOne(it => it.IdArea == data.IdArea &&
+                it.IdParty == data.IdParty);
+            }
+        }
+
+        [HttpGet]
+        public int GetCountOfTable4()
+        {
+            var count = Table4Collection.Find(it => true).ToList().Count;
+            return count;
+        }
+
+        [HttpPost]
         public async Task UpdatePartyScore()
         {
             var dataScoreArea = Table4Collection.Find(it => true).ToList();
@@ -529,7 +573,6 @@ namespace Election.Api.Controllers
                     }
                 }
             }
-            //Hack: move to upload process
             listPartyFinal.AddRange(listParty);
             var finalPartyScores = FinalPartyScoreCollection.Find(it => true).ToList();
 
