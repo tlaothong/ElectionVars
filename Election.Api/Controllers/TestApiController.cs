@@ -315,7 +315,6 @@ namespace Election.Api.Controllers
                     }
                 }
             }
-            //Hack: move to upload process
             listPartyFinal.AddRange(listParty);
             var finalPartyScores = FinalPartyScoreCollection.Find(it => true).ToList();
 
