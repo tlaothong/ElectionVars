@@ -28,7 +28,7 @@ namespace Election.Api.Controllers
         IMongoCollection<PartyList> FinalPartyScoreCollection { get; set; }
         IMongoCollection<PartyList> App1PartyScoreCollection { get; set; }
         IMongoCollection<ScorePollCsv> ScorePollCsvCollection { get; set; }
-        public static List<ScoreArea> listT4 { get; set; }
+        IMongoCollection<ScoreArea> ListT4Collection { get; set; }
 
         public ElectionV4Controller()
         {
@@ -51,6 +51,7 @@ namespace Election.Api.Controllers
             FinalPartyScoreCollection = database.GetCollection<PartyList>("TestFinalPartyScore");
             App1PartyScoreCollection = database.GetCollection<PartyList>("App1PartyScore");
             ScorePollCsvCollection = database.GetCollection<ScorePollCsv>("ScorePollCsv");
+            ListT4Collection = database.GetCollection<ScoreArea>("listT4");
         }
         // Api Score Poll =========================================================================
         [HttpGet]
@@ -409,7 +410,7 @@ namespace Election.Api.Controllers
             var dataScorePoll = FinalScorePollCollection.Find(it => true).ToList();
             var dataTable4 = Table4Collection.Find(it => true).ToList();
             var dataScorePollGroupByArea = dataScorePoll.GroupBy(it => it.IdArea).ToList();
-            listT4 = new List<ScoreArea>();
+            var listT4 = new List<ScoreArea>();
             foreach (var dataPoll in dataScorePollGroupByArea)
             {
                 var dataScorePollGroupByParty = dataPoll.GroupBy(it => it.IdParty).ToList();
@@ -432,44 +433,59 @@ namespace Election.Api.Controllers
                             getMatchDataTable4.Tags = new List<string>();
                         }
                         listT4.Add(getMatchDataTable4);
+                        // Table4Collection.ReplaceOne(it => it.IdArea == getMatchDataTable4.IdArea
+                        // && it.IdParty == getMatchDataTable4.IdParty, getMatchDataTable4);
                     }
                 }
+            }
+
+            for (int i = 0; i < listT4.Count; i += 550)
+            {
+                var list = listT4.Skip(i).Take(550);
+                ListT4Collection.InsertMany(list);
+                await Task.Delay(1000);
             }
 
             foreach (var data in dataTable4.GroupBy(it => it.IdArea))
             {
                 Table4Collection.DeleteMany(it => it.IdArea == data.Key);
             }
-
-            // for (int i = 0; i < listT4.Count; i += 550)
-            // {
-            //     var list = listT4.Skip(i).Take(550);
-            //     Table4Collection.InsertMany(list);
-            //     await Task.Delay(1000);
-            // }
         }
 
         [HttpPost]
         public async Task FillDataIntoTable4_1()
         {
-            var listTable4P1 = listT4.Skip(0).Take(listT4.Count / 2).ToList();
+            var dataListT4 = ListT4Collection.Find(it => true).ToList();
+            var listTable4P1 = dataListT4.Skip(0).Take(dataListT4.Count / 2).ToList();
             for (int i = 0; i < listTable4P1.Count; i += 550)
             {
                 var list = listTable4P1.Skip(i).Take(550);
                 Table4Collection.InsertMany(list);
                 await Task.Delay(1000);
             }
-        }
 
+            foreach (var data in listTable4P1)
+            {
+                ListT4Collection.DeleteOne(it => it.IdArea == data.IdArea &&
+                it.IdParty == data.IdParty);
+            }
+        }
         [HttpPost]
         public async Task FillDataIntoTable4_2()
         {
-            var listTable4P2 = listT4.Skip(listT4.Count / 2).Take(6000).ToList();
-            for (int i = 0; i < listTable4P2.Count; i += 550)
+            var dataListT4 = ListT4Collection.Find(it => true).ToList();
+            //var listTable4P2 = dataListT4.Skip(dataListT4.Count / 2).Take(6000).ToList();
+            for (int i = 0; i < dataListT4.Count; i += 550)
             {
-                var list = listTable4P2.Skip(i).Take(550);
+                var list = dataListT4.Skip(i).Take(550);
                 Table4Collection.InsertMany(list);
                 await Task.Delay(1000);
+            }
+
+            foreach (var data in dataListT4)
+            {
+                ListT4Collection.DeleteOne(it => it.IdArea == data.IdArea &&
+                it.IdParty == data.IdParty);
             }
         }
 
@@ -481,7 +497,6 @@ namespace Election.Api.Controllers
         }
 
         [HttpPost]
-        // public void UpdatePartyScore()
         public async Task UpdatePartyScore()
         {
             var dataScoreArea = Table4Collection.Find(it => true).ToList();
@@ -560,7 +575,6 @@ namespace Election.Api.Controllers
                     }
                 }
             }
-            //Hack: move to upload process
             listPartyFinal.AddRange(listParty);
             var finalPartyScores = FinalPartyScoreCollection.Find(it => true).ToList();
 
@@ -755,69 +769,8 @@ namespace Election.Api.Controllers
                 await Task.Delay(Delay);
             }
         }
-
     }
 }
 
-// while (!csvReader.EndOfStream)
-// {
-//     var getFormCsv = csvReader.ReadLine();
-//     var getLine = getFormCsv.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList();
-//     foreach (var item in getLine.Skip(1))
-//     {
-//         var getData = item.Split(',').ToList();
-//         if (getData[0] != "รหัสพรรค" && getData[1] != "ชื่อเขต" &&
-//         getData[2] != "รหัสเขต " && getData[3] != "ชื่อพรรค" && getData[4] != "เปอร์เซ็น/คะแนน"
-//         && getData[5] != "ภูมิภาค" && getData[6] != "รหัสภูมิภาค")
-//         //&& getData[4] != ""
-//         {
-//             float.TryParse(getData[4], out float score);
-//             listScoreCsv.Add(new ScorePollCsv
-//             {
-//                 Id = Guid.NewGuid().ToString(),
-//                 IdParty = getData[0],
-//                 NameParty = getData[3],
-//                 IdArea = getData[2],
-//                 NameArea = getData[1],
-//                 Score = score,
-//                 Region = getData[5],
-//                 IdRegion = getData[6]
-//             });
-//         }
-//     }
-// }
-
-//update Score Table 4
-//var getDataFromScorePoll = FinalScorePollCollection.Find(it => true).ToList();
-// var getTable4 = Table4Collection.Find(it => true).ToList();
-// listTable4 = new List<ScoreArea>();
-//not fill data csv
-// var groupByAreaScorePoll = listScorePoll.GroupBy(it => it.IdArea).ToList();
-// foreach (var data in listScorePoll)
-// {
-//     if (data.IdParty != "999")
-//     {
-//         var getTable4Update = getTable4.FirstOrDefault(it => it.IdArea == data.IdArea && it.IdParty == data.IdParty);
-//         getTable4Update.Score = data.Score;
-//         getTable4Update.Source = data.Source;
-//         getTable4Update.StatusEdit = false;
-//         getTable4Update.StatusAreaEdit = false;
-//         getTable4Update.Region = data.Region;
-//         getTable4Update.IdRegion = data.IdRegion;
-//         // create tag
-//         if (getTable4Update.Tags == null)
-//         {
-//             getTable4Update.Tags = new List<string>();
-//         }
-//         listTable4.Add(getTable4Update);
-//     }
-// }
-//var groupByAreaTable4 = listTable4.GroupBy(it => it.IdArea);
-
-// var dataTable4GroupByArea = getTable4.GroupBy(it => it.IdArea).ToList();
-// foreach (var data in dataTable4GroupByArea)
-// {
-//     Table4Collection.DeleteMany(it => it.IdArea == data.Key);
-// }
 
 
